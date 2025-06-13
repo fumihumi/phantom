@@ -26,7 +26,7 @@ Phantom is a powerful CLI tool that dramatically boosts your development product
 - 🎯 **Execute commands from anywhere** - Run commands in any worktree with `phantom exec <worktree> <command>`
 - 🪟 **Built-in tmux integration** - Open worktrees in new panes or windows
 - 🔍 **Interactive selection with fzf** - Use built-in fzf option for worktree selection
-- 🎮 **Shell completion** - Full autocomplete support for Fish and Zsh
+- 🎮 **Shell completion** - Full autocomplete support for Fish, Zsh, and Bash
 - ⚡ **Zero dependencies** - Fast and lightweight
 
 ## 🚀 Installation
@@ -80,7 +80,7 @@ Phantom provides perfect functionality as a command-line tool. Developers feel t
 
 #### Shell Completion
 
-Phantom supports full shell completion for fish and zsh. Use tab key to complete commands and worktree names.
+Phantom supports full shell completion for Fish, Zsh, and Bash. Use tab key to complete commands and worktree names.
 
 #### tmux Integration
 

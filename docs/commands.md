@@ -273,6 +273,9 @@ phantom completion fish > ~/.config/fish/completions/phantom.fish
 
 # For Zsh (add to .zshrc)
 eval "$(phantom completion zsh)"
+
+# For Bash (add to .bashrc)
+eval "$(phantom completion bash)"
 ```
 
 ## Exit Codes

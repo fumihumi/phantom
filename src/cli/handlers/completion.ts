@@ -79,7 +79,7 @@ complete -c phantom -n "__phantom_using_command shell" -l fzf -d "Use fzf for in
 complete -c phantom -n "__phantom_using_command shell" -a "(__phantom_list_worktrees)"
 
 # completion command - shell names
-complete -c phantom -n "__phantom_using_command completion" -a "fish zsh" -d "Shell type"`;
+complete -c phantom -n "__phantom_using_command completion" -a "fish zsh bash" -d "Shell type"`;
 
 const ZSH_COMPLETION_SCRIPT = `#compdef phantom
 # Zsh completion for phantom
@@ -159,7 +159,7 @@ _phantom() {
                     ;;
                 completion)
                     _arguments \\
-                        '1:shell:(fish zsh)'
+                        '1:shell:(fish zsh bash)'
                     ;;
             esac
             ;;
@@ -172,12 +172,164 @@ if [[ -n \${ZSH_VERSION} ]]; then
     compdef _phantom phantom
 fi`;
 
+const BASH_COMPLETION_SCRIPT = `# Bash completion for phantom
+# Place this in /etc/bash_completion.d/phantom or ~/.bash_completion
+# Or load dynamically with: eval "$(phantom completion bash)"
+
+_phantom_list_worktrees() {
+    phantom list --names 2>/dev/null || true
+}
+
+_phantom_completion() {
+    local cur prev words cword
+    _init_completion || return
+
+    local commands="create attach list where delete exec shell version completion"
+    local global_opts="--help --version"
+
+    if [[ \${cword} -eq 1 ]]; then
+        # Completing first argument (command)
+        COMPREPLY=( \$(compgen -W "\${commands}" -- "\${cur}") )
+        return 0
+    fi
+
+    local command="\${words[1]}"
+
+    case "\${command}" in
+        create)
+            case "\${prev}" in
+                --exec|-x)
+                    # Don't complete anything specific for exec commands
+                    return 0
+                    ;;
+                --copy-file)
+                    # Complete files
+                    _filedir
+                    return 0
+                    ;;
+                *)
+                    local opts="--shell --exec --tmux --tmux-vertical --tmux-horizontal --copy-file"
+                    COMPREPLY=( \$(compgen -W "\${opts}" -- "\${cur}") )
+                    return 0
+                    ;;
+            esac
+            ;;
+        attach)
+            case "\${prev}" in
+                --exec|-x)
+                    # Don't complete anything specific for exec commands
+                    return 0
+                    ;;
+                *)
+                    if [[ \${cword} -eq 2 ]]; then
+                        # First argument: worktree name (not completing existing ones)
+                        return 0
+                    elif [[ \${cword} -eq 3 ]]; then
+                        # Second argument: branch name (not completing - user needs to provide)
+                        return 0
+                    else
+                        local opts="--shell --exec"
+                        COMPREPLY=( \$(compgen -W "\${opts}" -- "\${cur}") )
+                        return 0
+                    fi
+                    ;;
+            esac
+            ;;
+        list)
+            local opts="--fzf --names"
+            COMPREPLY=( \$(compgen -W "\${opts}" -- "\${cur}") )
+            return 0
+            ;;
+        where)
+            if [[ "\${cur}" == -* ]]; then
+                local opts="--fzf"
+                COMPREPLY=( \$(compgen -W "\${opts}" -- "\${cur}") )
+            else
+                local worktrees=\$(_phantom_list_worktrees)
+                COMPREPLY=( \$(compgen -W "\${worktrees}" -- "\${cur}") )
+            fi
+            return 0
+            ;;
+        delete)
+            if [[ "\${cur}" == -* ]]; then
+                local opts="--force --current --fzf"
+                COMPREPLY=( \$(compgen -W "\${opts}" -- "\${cur}") )
+            else
+                local worktrees=\$(_phantom_list_worktrees)
+                COMPREPLY=( \$(compgen -W "\${worktrees}" -- "\${cur}") )
+            fi
+            return 0
+            ;;
+        exec)
+            case "\${prev}" in
+                --tmux|-t|--tmux-vertical|--tmux-v|--tmux-horizontal|--tmux-h)
+                    # After tmux options, expect worktree name
+                    local worktrees=\$(_phantom_list_worktrees)
+                    COMPREPLY=( \$(compgen -W "\${worktrees}" -- "\${cur}") )
+                    return 0
+                    ;;
+                *)
+                    if [[ "\${cur}" == -* ]]; then
+                        local opts="--fzf --tmux --tmux-vertical --tmux-horizontal"
+                        COMPREPLY=( \$(compgen -W "\${opts}" -- "\${cur}") )
+                    elif [[ \${cword} -eq 2 ]] || [[ " \${words[@]} " =~ " --fzf " && \${cword} -eq 3 ]]; then
+                        # First non-option argument should be worktree name
+                        local worktrees=\$(_phantom_list_worktrees)
+                        COMPREPLY=( \$(compgen -W "\${worktrees}" -- "\${cur}") )
+                    else
+                        # After worktree name, complete commands
+                        compopt -o default
+                        COMPREPLY=()
+                    fi
+                    return 0
+                    ;;
+            esac
+            ;;
+        shell)
+            case "\${prev}" in
+                --tmux|-t|--tmux-vertical|--tmux-v|--tmux-horizontal|--tmux-h)
+                    # After tmux options, expect worktree name
+                    local worktrees=\$(_phantom_list_worktrees)
+                    COMPREPLY=( \$(compgen -W "\${worktrees}" -- "\${cur}") )
+                    return 0
+                    ;;
+                *)
+                    if [[ "\${cur}" == -* ]]; then
+                        local opts="--fzf --tmux --tmux-vertical --tmux-horizontal"
+                        COMPREPLY=( \$(compgen -W "\${opts}" -- "\${cur}") )
+                    else
+                        local worktrees=\$(_phantom_list_worktrees)
+                        COMPREPLY=( \$(compgen -W "\${worktrees}" -- "\${cur}") )
+                    fi
+                    return 0
+                    ;;
+            esac
+            ;;
+        completion)
+            local shells="fish zsh bash"
+            COMPREPLY=( \$(compgen -W "\${shells}" -- "\${cur}") )
+            return 0
+            ;;
+        version)
+            # No completion for version command
+            return 0
+            ;;
+        *)
+            # Unknown command
+            return 0
+            ;;
+    esac
+}
+
+# Register the completion function
+complete -F _phantom_completion phantom`;
+
 export function completionHandler(args: string[]): void {
   const shell = args[0];
 
   if (!shell) {
     output.error("Usage: phantom completion <shell>");
-    output.error("Supported shells: fish, zsh");
+    output.error("Supported shells: fish, zsh, bash");
     exit(1);
   }
 
@@ -188,9 +340,12 @@ export function completionHandler(args: string[]): void {
     case "zsh":
       console.log(ZSH_COMPLETION_SCRIPT);
       break;
+    case "bash":
+      console.log(BASH_COMPLETION_SCRIPT);
+      break;
     default:
       output.error(`Unsupported shell: ${shell}`);
-      output.error("Supported shells: fish, zsh");
+      output.error("Supported shells: fish, zsh, bash");
       exit(1);
   }
 }
