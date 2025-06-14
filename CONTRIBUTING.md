@@ -205,24 +205,52 @@ To release a new version of Phantom:
    - Review the auto-generated release notes using `gh release view v<version>`
    - Check PR descriptions for important details using `gh pr view <number>`
    - Update the release notes to be more user-friendly:
-     - Group changes by category (Features, Bug Fixes, Improvements)
-     - Add usage examples for new features
-     - Explain the impact of changes in plain language
-     - Highlight security fixes and breaking changes
+     - Group changes by category (Features, Bug Fixes, Improvements, Documentation)
+     - Add usage examples for new features with code blocks
+     - Credit external contributors inline (e.g., "Thanks @username!")
+     - Include PR numbers for all changes
+     - Add installation/upgrade instructions
+     - Include "New Contributors" section with PR numbers
    
    ```bash
    # Edit the release notes
    gh release edit v<version> --notes "$(cat <<'EOF'
    ## 🚀 What's New in v<version>
    
-   ### ✨ New Features
-   - Feature description with usage example
+   <Brief overview of major changes>
    
-   ### 🐛 Bug Fixes
-   - Clear description of what was fixed
+   ### ✨ New Features
+   
+   #### Feature Name (#PR) - Thanks @contributor!
+   Description and usage example:
+   ```bash
+   # Example command
+   ```
    
    ### 🛠️ Improvements
-   - Performance, security, or other improvements
+   - **Improvement** (#PR) - Description
+   - **Another improvement** (#PR) - Description
+   
+   ### 🐛 Bug Fixes
+   - Fixed issue description (#PR) - Thanks @contributor!
+   
+   ### 📚 Documentation
+   - Documentation updates (#PR)
+   
+   ### 🙏 New Contributors
+   Welcome to our new contributors!
+   - @username - Contribution description (#PR)
+   
+   ---
+   
+   **Installation/Upgrade:**
+   ```bash
+   npm install -g @aku11i/phantom@latest
+   # or
+   brew upgrade phantom
+   ```
+   
+   **Full Changelog**: https://github.com/aku11i/phantom/compare/v<previous>...v<version>
    EOF
    )"
    ```
