@@ -145,13 +145,13 @@ To release a new version of Phantom:
 3. **Bump version**
    ```bash
    # For patch releases (bug fixes)
-   npm version patch
+   pnpm version:patch
 
    # For minor releases (new features)
-   npm version minor
+   pnpm version:minor
 
    # For major releases (breaking changes)
-   npm version major
+   pnpm version:major
    ```
 
 4. **Push the version commit and tag**
