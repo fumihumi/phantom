@@ -272,16 +272,21 @@ phantom completion <shell>
 **Supported Shells:**
 - `fish` - Fish shell
 - `zsh` - Z shell
+- `bash` - Bash shell
 
 **Installation:**
+
+When installed via Homebrew, completions for Fish and Zsh are installed automatically. For Bash, manual setup is required:
+
 ```bash
-# For Fish
-phantom completion fish > ~/.config/fish/completions/phantom.fish
+# For Fish (add to ~/.config/fish/config.fish for persistence)
+phantom completion fish | source
 
 # For Zsh (add to .zshrc)
 eval "$(phantom completion zsh)"
 
-# For Bash (add to .bashrc)
+# For Bash (add to .bashrc or .bash_profile)
+# Prerequisites: bash-completion v2 must be installed
 eval "$(phantom completion bash)"
 ```
 
