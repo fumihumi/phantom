@@ -159,17 +159,34 @@ To release a new version of Phantom:
    pnpm version:major
    ```
 
-5. **Push the version commit and tag**
+5. **Commit and tag the version changes**
+   ```bash
+   # Add all version changes
+   git add -A
+   
+   # Commit with version number as message (e.g., "1.0.1" for v1.0.1)
+   git commit -m "<version>"
+   
+   # Create tag with v prefix (e.g., "v1.0.1")
+   git tag v<version>
+   
+   # Example for v0.1.3:
+   git add -A
+   git commit -m "0.1.3"
+   git tag v0.1.3
+   ```
+
+6. **Push the version commit and tag**
    ```bash
    git push && git push --tags
    ```
 
-6. **Publish to npm**
+7. **Publish to npm**
    ```bash
    pnpm publish --recursive
    ```
 
-7. **Create GitHub release**
+8. **Create GitHub release**
    ```bash
    # Create a release with automatically generated notes
    gh release create v<version> \
@@ -184,7 +201,7 @@ To release a new version of Phantom:
      --target main
    ```
 
-8. **Update release notes for clarity**
+9. **Update release notes for clarity**
    - Review the auto-generated release notes using `gh release view v<version>`
    - Check PR descriptions for important details using `gh pr view <number>`
    - Update the release notes to be more user-friendly:
