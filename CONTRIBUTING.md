@@ -161,7 +161,7 @@ To release a new version of Phantom:
 
 5. **Publish to npm**
    ```bash
-   pnpm publish
+   pnpm publish --recursive
    ```
 
 6. **Create GitHub release**
