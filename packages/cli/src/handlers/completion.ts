@@ -71,11 +71,18 @@ complete -c phantom -n "__phantom_using_command delete" -l current -d "Delete th
 complete -c phantom -n "__phantom_using_command delete" -l fzf -d "Use fzf for interactive selection"
 complete -c phantom -n "__phantom_using_command delete" -a "(__phantom_list_worktrees)"
 
-# exec command - accept worktree names and then any command
+# exec command options
+complete -c phantom -n "__phantom_using_command exec" -l fzf -d "Use fzf for interactive selection"
+complete -c phantom -n "__phantom_using_command exec" -l tmux -d "Execute command in new tmux window (-t)"
+complete -c phantom -n "__phantom_using_command exec" -l tmux-vertical -d "Execute command in vertical split pane"
+complete -c phantom -n "__phantom_using_command exec" -l tmux-horizontal -d "Execute command in horizontal split pane"
 complete -c phantom -n "__phantom_using_command exec" -a "(__phantom_list_worktrees)"
 
 # shell command options
 complete -c phantom -n "__phantom_using_command shell" -l fzf -d "Use fzf for interactive selection"
+complete -c phantom -n "__phantom_using_command shell" -l tmux -d "Open shell in new tmux window (-t)"
+complete -c phantom -n "__phantom_using_command shell" -l tmux-vertical -d "Open shell in vertical split pane"
+complete -c phantom -n "__phantom_using_command shell" -l tmux-horizontal -d "Open shell in horizontal split pane"
 complete -c phantom -n "__phantom_using_command shell" -a "(__phantom_list_worktrees)"
 
 # completion command - shell names
@@ -138,9 +145,16 @@ _phantom() {
                 where|delete|shell)
                     local worktrees
                     worktrees=(\${(f)"$(phantom list --names 2>/dev/null)"})
-                    if [[ \${line[1]} == "where" || \${line[1]} == "shell" ]]; then
+                    if [[ \${line[1]} == "where" ]]; then
                         _arguments \\
                             '--fzf[Use fzf for interactive selection]' \\
+                            '1:worktree:(\${(q)worktrees[@]})'
+                    elif [[ \${line[1]} == "shell" ]]; then
+                        _arguments \\
+                            '--fzf[Use fzf for interactive selection]' \\
+                            '--tmux[Open shell in new tmux window (-t)]' \\
+                            '--tmux-vertical[Open shell in vertical split pane]' \\
+                            '--tmux-horizontal[Open shell in horizontal split pane]' \\
                             '1:worktree:(\${(q)worktrees[@]})'
                     elif [[ \${line[1]} == "delete" ]]; then
                         _arguments \\
@@ -154,6 +168,10 @@ _phantom() {
                     local worktrees
                     worktrees=(\${(f)"$(phantom list --names 2>/dev/null)"})
                     _arguments \\
+                        '--fzf[Use fzf for interactive selection]' \\
+                        '--tmux[Execute command in new tmux window (-t)]' \\
+                        '--tmux-vertical[Execute command in vertical split pane]' \\
+                        '--tmux-horizontal[Execute command in horizontal split pane]' \\
                         '1:worktree:(\${(q)worktrees[@]})' \\
                         '*:command:_command_names'
                     ;;
@@ -262,7 +280,7 @@ _phantom_completion() {
             ;;
         exec)
             case "\${prev}" in
-                --tmux|-t|--tmux-vertical|--tmux-v|--tmux-horizontal|--tmux-h)
+                --tmux|-t|--tmux-vertical|--tmux-horizontal)
                     # After tmux options, expect worktree name
                     local worktrees=\$(_phantom_list_worktrees)
                     COMPREPLY=( \$(compgen -W "\${worktrees}" -- "\${cur}") )
@@ -287,7 +305,7 @@ _phantom_completion() {
             ;;
         shell)
             case "\${prev}" in
-                --tmux|-t|--tmux-vertical|--tmux-v|--tmux-horizontal|--tmux-h)
+                --tmux|-t|--tmux-vertical|--tmux-horizontal)
                     # After tmux options, expect worktree name
                     local worktrees=\$(_phantom_list_worktrees)
                     COMPREPLY=( \$(compgen -W "\${worktrees}" -- "\${cur}") )
