@@ -13,11 +13,11 @@
   },
   "javascript": { "formatter": { "quoteStyle": "double" } },
   "files": {
-    "include": ["src/**/*", "*.ts", "*.js", "*.json"],
+    "include": ["packages/**/*", "*.ts", "*.js", "*.json"],
     "ignore": [
       "node_modules/**/*",
       ".git/**/*",
-      "dist/**/*",
+      "**/dist/**/*",
       "package.json",
       ".claude/**/*"
     ]
