@@ -52,6 +52,7 @@ complete -c phantom -n "__phantom_using_command create" -l tmux -d "Open the wor
 complete -c phantom -n "__phantom_using_command create" -l tmux-vertical -d "Open the worktree in a vertical tmux pane"
 complete -c phantom -n "__phantom_using_command create" -l tmux-horizontal -d "Open the worktree in a horizontal tmux pane"
 complete -c phantom -n "__phantom_using_command create" -l copy-file -d "Copy specified files from the current worktree" -r
+complete -c phantom -n "__phantom_using_command create" -l base -d "Branch or commit to create the new worktree from (defaults to HEAD)" -x
 
 # attach command options
 complete -c phantom -n "__phantom_using_command attach" -l shell -d "Open an interactive shell in the worktree after attaching (-s)"
@@ -128,6 +129,7 @@ _phantom() {
                         '--tmux-vertical[Open the worktree in a vertical tmux pane]' \\
                         '--tmux-horizontal[Open the worktree in a horizontal tmux pane]' \\
                         '*--copy-file[Copy specified files from the current worktree]:file:_files' \\
+                        '--base[Branch or commit to create the new worktree from (defaults to HEAD)]:branch/commit:' \\
                         '1:name:'
                     ;;
                 attach)
@@ -225,8 +227,12 @@ _phantom_completion() {
                     _filedir
                     return 0
                     ;;
+                --base)
+                    # Don't complete anything specific for base (branch/commit)
+                    return 0
+                    ;;
                 *)
-                    local opts="--shell --exec --tmux --tmux-vertical --tmux-horizontal --copy-file"
+                    local opts="--shell --exec --tmux --tmux-vertical --tmux-horizontal --copy-file --base"
                     COMPREPLY=( \$(compgen -W "\${opts}" -- "\${cur}") )
                     return 0
                     ;;
