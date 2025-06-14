@@ -9,7 +9,8 @@
     "phantom",
     "workspace",
     "development",
-    "parallel"
+    "parallel",
+    "mcp"
   ],
   "homepage": "https://github.com/aku11i/phantom#readme",
   "bugs": {
@@ -25,6 +26,6 @@
   "bin": {
     "phantom": "./phantom.js"
   },
-  "files": ["phantom.js", "README.md", "README.ja.md", "LICENSE"],
+  "files": ["phantom.js", "README.md", "LICENSE"],
   "dependencies": {}
 }

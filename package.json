@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @aku11i/phantom-cli build",
+    "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "biome check .",
     "fix": "biome check --write .",
