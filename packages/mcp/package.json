@@ -1,0 +1,24 @@
+{
+  "name": "@aku11i/phantom-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types --experimental-test-module-mocks \"src/**/*.test.js\"",
+    "inspect": "npx @modelcontextprotocol/inspector node --no-warnings --experimental-strip-types src/dev.ts"
+  },
+  "dependencies": {
+    "@aku11i/phantom-core": "workspace:*",
+    "@aku11i/phantom-git": "workspace:*",
+    "@aku11i/phantom-process": "workspace:*",
+    "@aku11i/phantom-shared": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.3",
+    "zod": "^3.25.64"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.14.1"
+  }
+}
