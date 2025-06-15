@@ -142,7 +142,7 @@ phantom shell my-feature
 
 ```bash
 # Create worktree from a remote branch
-phantom attach origin/pr-branch --shell
+phantom attach pr-branch --shell
 
 # Review code, run tests
 npm test
