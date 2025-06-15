@@ -181,12 +181,17 @@ To release a new version of Phantom:
    git push && git push --tags
    ```
 
-7. **Publish to npm**
+7. **Build the project before publishing**
+   ```bash
+   pnpm build
+   ```
+
+8. **Publish to npm**
    ```bash
    pnpm publish --recursive
    ```
 
-8. **Create GitHub release**
+9. **Create GitHub release**
    ```bash
    # Create a release with automatically generated notes
    gh release create v<version> \
@@ -201,7 +206,7 @@ To release a new version of Phantom:
      --target main
    ```
 
-9. **Update release notes for clarity**
+10. **Update release notes for clarity**
    - Review the auto-generated release notes using `gh release view v<version>`
    - Check PR descriptions for important details using `gh pr view <number>`
    - Update the release notes to be more user-friendly:
