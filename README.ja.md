@@ -27,6 +27,7 @@ PhantomはGit worktreeをシンプルかつパワフルに操り、開発生産�
 - 🪟 **組み込みtmux統合** - ワークツリーを新しいペインやウィンドウで開きます
 - 🔍 **fzfによるインタラクティブな選択** - worktreeの選択に組み込みのfzfオプションを使用できます
 - 🎮 **シェル補完** - Fish,Zsh,Bashの完全な自動補完サポート
+- 🐙 **GitHub統合** - GitHubのPRやイシューから直接ワークツリーを作成
 - 🤖 **MCP統合** - AIが自律的にワークツリーを管理し、並行開発を実現
 - ⚡ **高速で軽量** - 最小限の外部依存関係
 
@@ -196,6 +197,7 @@ phantom delete feature-awesome
 - **[はじめに](./docs/getting-started.md)** - 一般的なワークフローとヒント
 - **[コマンドリファレンス](./docs/commands.md)** - すべてのコマンドとオプション
 - **[設定](./docs/configuration.md)** - 自動ファイルコピーと作成後コマンドの設定
+- **[GitHub統合](./docs/github.md)** - GitHubプルリクエストとイシューの操作
 - **[MCP統合](./docs/mcp.md)** - Model Context ProtocolによるAIを活用した並行開発
 
 
