@@ -110,6 +110,7 @@ export async function createHandler(args: string[]): Promise<void> {
     const gitRoot = await getGitRoot();
 
     let filesToCopy: string[] = [];
+    let basePath: string | undefined;
 
     // Load files from config
     const configResult = await loadConfig(gitRoot);
@@ -117,6 +118,7 @@ export async function createHandler(args: string[]): Promise<void> {
       if (configResult.value.postCreate?.copyFiles) {
         filesToCopy = [...configResult.value.postCreate.copyFiles];
       }
+      basePath = configResult.value.basePath;
     } else {
       // Display warning for validation and parse errors
       if (configResult.error instanceof ConfigValidationError) {
@@ -139,6 +141,7 @@ export async function createHandler(args: string[]): Promise<void> {
     const result = await createWorktreeCore(gitRoot, worktreeName, {
       copyFiles: filesToCopy.length > 0 ? filesToCopy : undefined,
       base: baseOption,
+      basePath,
     });
 
     if (isErr(result)) {
@@ -165,11 +168,12 @@ export async function createHandler(args: string[]): Promise<void> {
       for (const command of commands) {
         output.log(`Executing: ${command}`);
         const shell = process.env.SHELL || "/bin/sh";
-        const cmdResult = await execInWorktree(gitRoot, worktreeName, [
-          shell,
-          "-c",
-          command,
-        ]);
+        const cmdResult = await execInWorktree(
+          gitRoot,
+          worktreeName,
+          [shell, "-c", command],
+          { basePath },
+        );
 
         if (isErr(cmdResult)) {
           output.error(`Failed to execute command: ${cmdResult.error.message}`);
@@ -200,7 +204,7 @@ export async function createHandler(args: string[]): Promise<void> {
         gitRoot,
         worktreeName,
         [shell, "-c", execCommand],
-        { interactive: true },
+        { interactive: true, basePath },
       );
 
       if (isErr(execResult)) {
@@ -221,7 +225,11 @@ export async function createHandler(args: string[]): Promise<void> {
       );
       output.log("Type 'exit' to return to your original directory\n");
 
-      const shellResult = await shellInWorktree(gitRoot, worktreeName);
+      const shellResult = await shellInWorktree(
+        gitRoot,
+        worktreeName,
+        basePath,
+      );
 
       if (isErr(shellResult)) {
         output.error(shellResult.error.message);

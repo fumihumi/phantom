@@ -4,9 +4,10 @@ import {
   WorktreeNotFoundError,
   deleteWorktree as deleteWorktreeCore,
   selectWorktreeWithFzf,
+  loadConfig,
 } from "@aku11i/phantom-core";
 import { getCurrentWorktree, getGitRoot } from "@aku11i/phantom-git";
-import { isErr } from "@aku11i/phantom-shared";
+import { isErr, isOk } from "@aku11i/phantom-shared";
 import { exitCodes, exitWithError, exitWithSuccess } from "../errors.ts";
 import { output } from "../output.ts";
 
@@ -59,6 +60,13 @@ export async function deleteHandler(args: string[]): Promise<void> {
   try {
     const gitRoot = await getGitRoot();
 
+    // Load config to get basePath
+    let basePath: string | undefined;
+    const configResult = await loadConfig(gitRoot);
+    if (isOk(configResult)) {
+      basePath = configResult.value.basePath;
+    }
+
     let worktreeName: string;
     if (deleteCurrent) {
       const currentWorktree = await getCurrentWorktree(gitRoot);
@@ -70,7 +78,7 @@ export async function deleteHandler(args: string[]): Promise<void> {
       }
       worktreeName = currentWorktree;
     } else if (useFzf) {
-      const selectResult = await selectWorktreeWithFzf(gitRoot);
+      const selectResult = await selectWorktreeWithFzf(gitRoot, basePath);
       if (isErr(selectResult)) {
         exitWithError(selectResult.error.message, exitCodes.generalError);
       }
@@ -84,6 +92,7 @@ export async function deleteHandler(args: string[]): Promise<void> {
 
     const result = await deleteWorktreeCore(gitRoot, worktreeName, {
       force: forceDelete,
+      basePath,
     });
 
     if (isErr(result)) {

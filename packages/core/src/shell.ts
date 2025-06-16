@@ -13,10 +13,15 @@ export type ShellInWorktreeSuccess = SpawnSuccess;
 export async function shellInWorktree(
   gitRoot: string,
   worktreeName: string,
+  basePath?: string,
 ): Promise<
   Result<ShellInWorktreeSuccess, WorktreeNotFoundError | ProcessError>
 > {
-  const validation = await validateWorktreeExists(gitRoot, worktreeName);
+  const validation = await validateWorktreeExists(
+    gitRoot,
+    worktreeName,
+    basePath,
+  );
   if (isErr(validation)) {
     return err(validation.error);
   }

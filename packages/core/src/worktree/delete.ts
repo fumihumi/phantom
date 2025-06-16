@@ -8,6 +8,7 @@ import { validateWorktreeExists } from "./validate.ts";
 
 export interface DeleteWorktreeOptions {
   force?: boolean;
+  basePath?: string;
 }
 
 export interface DeleteWorktreeSuccess {
@@ -85,9 +86,9 @@ export async function deleteWorktree(
 ): Promise<
   Result<DeleteWorktreeSuccess, WorktreeNotFoundError | WorktreeError>
 > {
-  const { force = false } = options;
+  const { force = false, basePath } = options;
 
-  const validation = await validateWorktreeExists(gitRoot, name);
+  const validation = await validateWorktreeExists(gitRoot, name, basePath);
   if (isErr(validation)) {
     return err(validation.error);
   }

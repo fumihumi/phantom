@@ -47,8 +47,9 @@ export async function getWorktreeStatus(
 export async function getWorktreeInfo(
   gitRoot: string,
   name: string,
+  basePath?: string,
 ): Promise<WorktreeInfo> {
-  const worktreePath = getWorktreePath(gitRoot, name);
+  const worktreePath = getWorktreePath(gitRoot, name, basePath);
 
   const [branch, isClean] = await Promise.all([
     getWorktreeBranch(worktreePath),
@@ -65,10 +66,11 @@ export async function getWorktreeInfo(
 
 export async function listWorktrees(
   gitRoot: string,
+  basePath?: string,
 ): Promise<Result<ListWorktreesSuccess, never>> {
   try {
     const gitWorktrees = await gitListWorktrees(gitRoot);
-    const phantomDir = getPhantomDirectory(gitRoot);
+    const phantomDir = getPhantomDirectory(gitRoot, basePath);
 
     const phantomWorktrees = gitWorktrees.filter((worktree) =>
       worktree.path.startsWith(phantomDir),

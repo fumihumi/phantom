@@ -2,9 +2,10 @@ import { parseArgs } from "node:util";
 import {
   selectWorktreeWithFzf,
   whereWorktree as whereWorktreeCore,
+  loadConfig,
 } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
-import { isErr } from "@aku11i/phantom-shared";
+import { isErr, isOk } from "@aku11i/phantom-shared";
 import { exitCodes, exitWithError, exitWithSuccess } from "../errors.ts";
 import { output } from "../output.ts";
 
@@ -49,8 +50,15 @@ export async function whereHandler(args: string[]): Promise<void> {
     );
   }
 
+  // Load config to get basePath
+  let basePath: string | undefined;
+  const configResult = await loadConfig(gitRoot);
+  if (isOk(configResult)) {
+    basePath = configResult.value.basePath;
+  }
+
   if (useFzf) {
-    const selectResult = await selectWorktreeWithFzf(gitRoot);
+    const selectResult = await selectWorktreeWithFzf(gitRoot, basePath);
     if (isErr(selectResult)) {
       exitWithError(selectResult.error.message, exitCodes.generalError);
     }
@@ -62,7 +70,7 @@ export async function whereHandler(args: string[]): Promise<void> {
     worktreeName = positionals[0];
   }
 
-  const result = await whereWorktreeCore(gitRoot, worktreeName);
+  const result = await whereWorktreeCore(gitRoot, worktreeName, basePath);
 
   if (isErr(result)) {
     exitWithError(result.error.message, exitCodes.notFound);

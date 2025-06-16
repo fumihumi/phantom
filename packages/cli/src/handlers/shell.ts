@@ -4,6 +4,7 @@ import {
   selectWorktreeWithFzf,
   shellInWorktree as shellInWorktreeCore,
   validateWorktreeExists,
+  loadConfig,
 } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
 import {
@@ -11,7 +12,7 @@ import {
   getPhantomEnv,
   isInsideTmux,
 } from "@aku11i/phantom-process";
-import { isErr } from "@aku11i/phantom-shared";
+import { isErr, isOk } from "@aku11i/phantom-shared";
 import { exitCodes, exitWithError, exitWithSuccess } from "../errors.ts";
 import { output } from "../output.ts";
 
@@ -82,6 +83,13 @@ export async function shellHandler(args: string[]): Promise<void> {
   try {
     const gitRoot = await getGitRoot();
 
+    // Load config to get basePath
+    let basePath: string | undefined;
+    const configResult = await loadConfig(gitRoot);
+    if (isOk(configResult)) {
+      basePath = configResult.value.basePath;
+    }
+
     if (tmuxOption && !(await isInsideTmux())) {
       exitWithError(
         "The --tmux option can only be used inside a tmux session",
@@ -90,7 +98,7 @@ export async function shellHandler(args: string[]): Promise<void> {
     }
 
     if (useFzf) {
-      const selectResult = await selectWorktreeWithFzf(gitRoot);
+      const selectResult = await selectWorktreeWithFzf(gitRoot, basePath);
       if (isErr(selectResult)) {
         exitWithError(selectResult.error.message, exitCodes.generalError);
       }
@@ -103,7 +111,7 @@ export async function shellHandler(args: string[]): Promise<void> {
     }
 
     // Get worktree path for display
-    const validation = await validateWorktreeExists(gitRoot, worktreeName);
+    const validation = await validateWorktreeExists(gitRoot, worktreeName, basePath);
     if (isErr(validation)) {
       exitWithError(validation.error.message, exitCodes.generalError);
     }
@@ -142,7 +150,7 @@ export async function shellHandler(args: string[]): Promise<void> {
     );
     output.log("Type 'exit' to return to your original directory\n");
 
-    const result = await shellInWorktreeCore(gitRoot, worktreeName);
+    const result = await shellInWorktreeCore(gitRoot, worktreeName, basePath);
 
     if (isErr(result)) {
       const exitCode =

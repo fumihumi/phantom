@@ -5,9 +5,10 @@ import {
   attachWorktreeCore,
   execInWorktree,
   shellInWorktree,
+  loadConfig,
 } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
-import { isErr } from "@aku11i/phantom-shared";
+import { isErr, isOk } from "@aku11i/phantom-shared";
 import { exitCodes, exitWithError } from "../errors.ts";
 import { output } from "../output.ts";
 
@@ -45,7 +46,15 @@ export async function attachHandler(args: string[]): Promise<void> {
   }
 
   const gitRoot = await getGitRoot();
-  const result = await attachWorktreeCore(gitRoot, branchName);
+  
+  // Load config to get basePath
+  let basePath: string | undefined;
+  const configResult = await loadConfig(gitRoot);
+  if (isOk(configResult)) {
+    basePath = configResult.value.basePath;
+  }
+  
+  const result = await attachWorktreeCore(gitRoot, branchName, basePath);
 
   if (isErr(result)) {
     const error = result.error;
@@ -62,7 +71,7 @@ export async function attachHandler(args: string[]): Promise<void> {
   output.log(`Attached phantom: ${branchName}`);
 
   if (values.shell) {
-    const shellResult = await shellInWorktree(gitRoot, branchName);
+    const shellResult = await shellInWorktree(gitRoot, branchName, basePath);
     if (isErr(shellResult)) {
       exitWithError(shellResult.error.message, exitCodes.generalError);
     }
@@ -72,7 +81,7 @@ export async function attachHandler(args: string[]): Promise<void> {
       gitRoot,
       branchName,
       [shell, "-c", values.exec],
-      { interactive: true },
+      { interactive: true, basePath },
     );
     if (isErr(execResult)) {
       exitWithError(execResult.error.message, exitCodes.generalError);

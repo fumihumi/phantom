@@ -8,13 +8,14 @@ import { validateWorktreeName } from "./validate.ts";
 export async function attachWorktreeCore(
   gitRoot: string,
   name: string,
+  basePath?: string,
 ): Promise<Result<string, Error>> {
   const validation = validateWorktreeName(name);
   if (isErr(validation)) {
     return validation;
   }
 
-  const worktreePath = getWorktreePath(gitRoot, name);
+  const worktreePath = getWorktreePath(gitRoot, name, basePath);
   if (existsSync(worktreePath)) {
     return err(new WorktreeAlreadyExistsError(name));
   }
