@@ -34,6 +34,7 @@ describe("whereWorktree", () => {
     deepStrictEqual(validateMock.mock.calls[0].arguments, [
       "/test/repo",
       "my-feature",
+      undefined,
     ]);
 
     validateMock.mock.resetCalls();

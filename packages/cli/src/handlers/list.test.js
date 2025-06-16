@@ -8,6 +8,7 @@ const consoleErrorMock = mock.fn();
 const getGitRootMock = mock.fn();
 const listWorktreesCoreMock = mock.fn();
 const selectWorktreeWithFzfMock = mock.fn();
+const loadConfigMock = mock.fn();
 const exitWithErrorMock = mock.fn((message, code) => {
   if (message) consoleErrorMock(`Error: ${message}`);
   exitMock(code);
@@ -31,6 +32,7 @@ mock.module("@aku11i/phantom-core", {
   namedExports: {
     listWorktrees: listWorktreesCoreMock,
     selectWorktreeWithFzf: selectWorktreeWithFzfMock,
+    loadConfig: loadConfigMock,
   },
 });
 
@@ -63,12 +65,14 @@ describe("listHandler", () => {
     getGitRootMock.mock.resetCalls();
     listWorktreesCoreMock.mock.resetCalls();
     selectWorktreeWithFzfMock.mock.resetCalls();
+    loadConfigMock.mock.resetCalls();
     exitWithErrorMock.mock.resetCalls();
   };
 
   it("should list worktrees in default format", async () => {
     resetMocks();
     getGitRootMock.mock.mockImplementation(() => Promise.resolve("/test/repo"));
+    loadConfigMock.mock.mockImplementation(() => Promise.resolve(err(new Error("Config not found"))));
     listWorktreesCoreMock.mock.mockImplementation(() =>
       Promise.resolve(
         ok({

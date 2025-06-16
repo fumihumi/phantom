@@ -106,6 +106,7 @@ describe("deleteWorktree", () => {
     deepStrictEqual(validateWorktreeExistsMock.mock.calls[0].arguments, [
       "/test/repo",
       "feature",
+      undefined,
     ]);
 
     strictEqual(executeGitCommandInDirectoryMock.mock.calls.length, 1);
