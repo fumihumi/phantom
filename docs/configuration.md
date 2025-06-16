@@ -4,6 +4,7 @@
 
 - [Configuration File](#configuration-file)
 - [Configuration Options](#configuration-options)
+  - [basePath](#basepath)
   - [postCreate.copyFiles](#postcreatecopyfiles)
   - [postCreate.commands](#postcreatecommands)
 
@@ -15,6 +16,7 @@ Create a `phantom.config.json` file in your repository root:
 
 ```json
 {
+  "basePath": "../phantom-worktrees",
   "postCreate": {
     "copyFiles": [
       ".env",
@@ -30,6 +32,57 @@ Create a `phantom.config.json` file in your repository root:
 ```
 
 ## Configuration Options
+
+### basePath
+
+A custom base directory where Phantom worktrees will be created. By default, Phantom creates all worktrees in `.git/phantom/worktrees/`, but you can customize this location using the `basePath` option.
+
+**Use Cases:**
+- Store worktrees outside the main repository directory
+- Use a shared location for multiple repositories
+- Keep worktrees on a different filesystem or drive
+- Organize worktrees in a custom directory structure
+
+**Examples:**
+
+**Relative path (relative to repository root):**
+```json
+{
+  "basePath": "../phantom-worktrees"
+}
+```
+This creates worktrees in `../phantom-worktrees/worktrees/`
+
+**Absolute path:**
+```json
+{
+  "basePath": "/tmp/my-phantom-worktrees"
+}
+```
+This creates worktrees in `/tmp/my-phantom-worktrees/worktrees/`
+
+**Directory Structure:**
+With `basePath` set to `../phantom-worktrees`, your directory structure will look like:
+
+```
+parent-directory/
+├── your-project/           # Git repository
+│   ├── .git/
+│   ├── phantom.config.json
+│   └── ...
+└── phantom-worktrees/      # Custom worktree location
+    └── worktrees/
+        ├── feature-1/
+        ├── feature-2/
+        └── bugfix-login/
+```
+
+**Notes:**
+- If `basePath` is not specified, defaults to `.git/phantom/worktrees`
+- Relative paths are resolved from the repository root
+- Absolute paths are used as-is
+- The directory will be created automatically if it doesn't exist
+- All Phantom worktrees will be stored in `{basePath}/worktrees/`
 
 ### postCreate.copyFiles
 

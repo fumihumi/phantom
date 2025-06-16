@@ -76,6 +76,8 @@ your-project/    # Git repository
 └── ...
 ```
 
+You can also customize the worktree location using the `basePath` configuration option in `phantom.config.json`. This allows you to store worktrees in any location you prefer.
+
 This convention means you never need to remember worktree paths - just use the branch name for easy worktree operations.
 
 ### ✈️ Features for a Comfortable Development Experience
