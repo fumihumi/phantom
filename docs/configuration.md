@@ -51,7 +51,7 @@ A custom base directory where Phantom worktrees will be created. By default, Pha
   "basePath": "../phantom-worktrees"
 }
 ```
-This creates worktrees in `../phantom-worktrees/worktrees/`
+This creates worktrees directly in `../phantom-worktrees/` (e.g., `../phantom-worktrees/feature-1`)
 
 **Absolute path:**
 ```json
@@ -59,7 +59,7 @@ This creates worktrees in `../phantom-worktrees/worktrees/`
   "basePath": "/tmp/my-phantom-worktrees"
 }
 ```
-This creates worktrees in `/tmp/my-phantom-worktrees/worktrees/`
+This creates worktrees directly in `/tmp/my-phantom-worktrees/` (e.g., `/tmp/my-phantom-worktrees/feature-1`)
 
 **Directory Structure:**
 With `basePath` set to `../phantom-worktrees`, your directory structure will look like:
@@ -71,10 +71,9 @@ parent-directory/
 │   ├── phantom.config.json
 │   └── ...
 └── phantom-worktrees/      # Custom worktree location
-    └── worktrees/
-        ├── feature-1/
-        ├── feature-2/
-        └── bugfix-login/
+    ├── feature-1/
+    ├── feature-2/
+    └── bugfix-login/
 ```
 
 **Notes:**
@@ -82,7 +81,7 @@ parent-directory/
 - Relative paths are resolved from the repository root
 - Absolute paths are used as-is
 - The directory will be created automatically if it doesn't exist
-- All Phantom worktrees will be stored in `{basePath}/worktrees/`
+- When basePath is specified, worktrees are created directly in that directory
 
 ### postCreate.copyFiles
 

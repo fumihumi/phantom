@@ -72,7 +72,9 @@ describe("listHandler", () => {
   it("should list worktrees in default format", async () => {
     resetMocks();
     getGitRootMock.mock.mockImplementation(() => Promise.resolve("/test/repo"));
-    loadConfigMock.mock.mockImplementation(() => Promise.resolve(err(new Error("Config not found"))));
+    loadConfigMock.mock.mockImplementation(() =>
+      Promise.resolve(err(new Error("Config not found"))),
+    );
     listWorktreesCoreMock.mock.mockImplementation(() =>
       Promise.resolve(
         ok({

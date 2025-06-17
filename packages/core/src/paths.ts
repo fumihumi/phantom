@@ -6,10 +6,7 @@ export function getPhantomDirectory(
 ): string {
   if (basePath) {
     // If basePath is absolute, use it as-is. If relative, resolve from gitRoot
-    const resolvedBasePath = isAbsolute(basePath)
-      ? basePath
-      : join(gitRoot, basePath);
-    return join(resolvedBasePath, "worktrees");
+    return isAbsolute(basePath) ? basePath : join(gitRoot, basePath);
   }
   return join(gitRoot, ".git", "phantom", "worktrees");
 }

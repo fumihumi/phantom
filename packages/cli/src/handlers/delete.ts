@@ -3,8 +3,8 @@ import {
   WorktreeError,
   WorktreeNotFoundError,
   deleteWorktree as deleteWorktreeCore,
-  selectWorktreeWithFzf,
   loadConfig,
+  selectWorktreeWithFzf,
 } from "@aku11i/phantom-core";
 import { getCurrentWorktree, getGitRoot } from "@aku11i/phantom-git";
 import { isErr, isOk } from "@aku11i/phantom-shared";

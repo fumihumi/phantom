@@ -1,8 +1,8 @@
 import { parseArgs } from "node:util";
 import {
+  loadConfig,
   selectWorktreeWithFzf,
   whereWorktree as whereWorktreeCore,
-  loadConfig,
 } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
 import { isErr, isOk } from "@aku11i/phantom-shared";

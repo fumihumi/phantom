@@ -1,10 +1,10 @@
 import { parseArgs } from "node:util";
 import {
   WorktreeNotFoundError,
+  loadConfig,
   selectWorktreeWithFzf,
   shellInWorktree as shellInWorktreeCore,
   validateWorktreeExists,
-  loadConfig,
 } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
 import {
@@ -111,7 +111,11 @@ export async function shellHandler(args: string[]): Promise<void> {
     }
 
     // Get worktree path for display
-    const validation = await validateWorktreeExists(gitRoot, worktreeName, basePath);
+    const validation = await validateWorktreeExists(
+      gitRoot,
+      worktreeName,
+      basePath,
+    );
     if (isErr(validation)) {
       exitWithError(validation.error.message, exitCodes.generalError);
     }

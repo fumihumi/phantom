@@ -4,8 +4,8 @@ import {
   WorktreeAlreadyExistsError,
   attachWorktreeCore,
   execInWorktree,
-  shellInWorktree,
   loadConfig,
+  shellInWorktree,
 } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
 import { isErr, isOk } from "@aku11i/phantom-shared";
@@ -46,14 +46,14 @@ export async function attachHandler(args: string[]): Promise<void> {
   }
 
   const gitRoot = await getGitRoot();
-  
+
   // Load config to get basePath
   let basePath: string | undefined;
   const configResult = await loadConfig(gitRoot);
   if (isOk(configResult)) {
     basePath = configResult.value.basePath;
   }
-  
+
   const result = await attachWorktreeCore(gitRoot, branchName, basePath);
 
   if (isErr(result)) {
