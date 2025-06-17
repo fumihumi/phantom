@@ -32,7 +32,10 @@ export async function listHandler(args: string[] = []): Promise<void> {
     const { context } = await createPhantomContext(gitRoot);
 
     if (values.fzf) {
-      const selectResult = await selectWorktreeWithFzf(gitRoot, context.basePath);
+      const selectResult = await selectWorktreeWithFzf(
+        gitRoot,
+        context.basePath,
+      );
 
       if (isErr(selectResult)) {
         exitWithError(selectResult.error.message, exitCodes.generalError);

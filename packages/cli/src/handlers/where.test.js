@@ -39,6 +39,15 @@ mock.module("@aku11i/phantom-core", {
     loadConfig: mock.fn(() =>
       Promise.resolve({ ok: false, error: new Error("Config not found") }),
     ),
+    createPhantomContext: mock.fn(() =>
+      Promise.resolve({
+        context: {
+          gitRoot: "/mock/git/root",
+          config: {},
+          basePath: undefined,
+        },
+      }),
+    ),
   },
 });
 

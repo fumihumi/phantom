@@ -74,7 +74,10 @@ export async function deleteHandler(args: string[]): Promise<void> {
       }
       worktreeName = currentWorktree;
     } else if (useFzf) {
-      const selectResult = await selectWorktreeWithFzf(gitRoot, context.basePath);
+      const selectResult = await selectWorktreeWithFzf(
+        gitRoot,
+        context.basePath,
+      );
       if (isErr(selectResult)) {
         exitWithError(selectResult.error.message, exitCodes.generalError);
       }

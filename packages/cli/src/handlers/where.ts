@@ -66,7 +66,11 @@ export async function whereHandler(args: string[]): Promise<void> {
     worktreeName = positionals[0];
   }
 
-  const result = await whereWorktreeCore(gitRoot, worktreeName, context.basePath);
+  const result = await whereWorktreeCore(
+    gitRoot,
+    worktreeName,
+    context.basePath,
+  );
 
   if (isErr(result)) {
     exitWithError(result.error.message, exitCodes.notFound);

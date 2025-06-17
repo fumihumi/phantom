@@ -94,7 +94,10 @@ export async function shellHandler(args: string[]): Promise<void> {
     }
 
     if (useFzf) {
-      const selectResult = await selectWorktreeWithFzf(gitRoot, context.basePath);
+      const selectResult = await selectWorktreeWithFzf(
+        gitRoot,
+        context.basePath,
+      );
       if (isErr(selectResult)) {
         exitWithError(selectResult.error.message, exitCodes.generalError);
       }
@@ -150,7 +153,11 @@ export async function shellHandler(args: string[]): Promise<void> {
     );
     output.log("Type 'exit' to return to your original directory\n");
 
-    const result = await shellInWorktreeCore(gitRoot, worktreeName, context.basePath);
+    const result = await shellInWorktreeCore(
+      gitRoot,
+      worktreeName,
+      context.basePath,
+    );
 
     if (isErr(result)) {
       const exitCode =

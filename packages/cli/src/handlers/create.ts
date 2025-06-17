@@ -111,11 +111,13 @@ export async function createHandler(args: string[]): Promise<void> {
 
     // Display configuration warnings if any
     if (configWarnings) {
-      configWarnings.forEach(warning => output.warn(warning));
+      for (const warning of configWarnings) {
+        output.warn(warning);
+      }
     }
 
     let filesToCopy: string[] = [];
-    
+
     // Load files from config
     if (context.config.postCreate?.copyFiles) {
       filesToCopy = [...context.config.postCreate.copyFiles];

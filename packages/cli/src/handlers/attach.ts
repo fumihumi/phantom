@@ -3,6 +3,7 @@ import {
   BranchNotFoundError,
   WorktreeAlreadyExistsError,
   attachWorktreeCore,
+  createPhantomContext,
   execInWorktree,
   loadConfig,
   shellInWorktree,
@@ -50,7 +51,11 @@ export async function attachHandler(args: string[]): Promise<void> {
   // Create PhantomContext with centralized config loading
   const { context } = await createPhantomContext(gitRoot);
 
-  const result = await attachWorktreeCore(gitRoot, branchName, context.basePath);
+  const result = await attachWorktreeCore(
+    gitRoot,
+    branchName,
+    context.basePath,
+  );
 
   if (isErr(result)) {
     const error = result.error;
@@ -67,7 +72,11 @@ export async function attachHandler(args: string[]): Promise<void> {
   output.log(`Attached phantom: ${branchName}`);
 
   if (values.shell) {
-    const shellResult = await shellInWorktree(gitRoot, branchName, context.basePath);
+    const shellResult = await shellInWorktree(
+      gitRoot,
+      branchName,
+      context.basePath,
+    );
     if (isErr(shellResult)) {
       exitWithError(shellResult.error.message, exitCodes.generalError);
     }

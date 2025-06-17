@@ -21,10 +21,10 @@ describe("PhantomContext", () => {
       basePath: "custom/path",
       postCreate: {
         copyFiles: ["file1.txt"],
-        commands: ["echo test"]
-      }
+        commands: ["echo test"],
+      },
     };
-    
+
     await writeFile(
       path.join(tempDir, "phantom.config.json"),
       JSON.stringify(config),
@@ -61,7 +61,10 @@ describe("PhantomContext", () => {
     assert.strictEqual(context.basePath, undefined);
     assert.strictEqual(Array.isArray(configWarnings), true);
     assert.strictEqual(configWarnings.length, 1);
-    assert.strictEqual(configWarnings[0].startsWith("Configuration warning:"), true);
+    assert.strictEqual(
+      configWarnings[0].startsWith("Configuration warning:"),
+      true,
+    );
   });
 
   test("createPhantomContext with invalid config format", async () => {
@@ -77,7 +80,10 @@ describe("PhantomContext", () => {
     assert.strictEqual(context.basePath, undefined);
     assert.strictEqual(Array.isArray(configWarnings), true);
     assert.strictEqual(configWarnings.length, 1);
-    assert.strictEqual(configWarnings[0].startsWith("Configuration warning:"), true);
+    assert.strictEqual(
+      configWarnings[0].startsWith("Configuration warning:"),
+      true,
+    );
   });
 
   test("createPhantomContext with empty config", async () => {

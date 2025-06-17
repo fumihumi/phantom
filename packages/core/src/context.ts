@@ -2,14 +2,14 @@ import { type Result, isOk } from "@aku11i/phantom-shared";
 import {
   ConfigNotFoundError,
   ConfigParseError,
-  loadConfig,
   type PhantomConfig,
+  loadConfig,
 } from "./config/loader.ts";
 import { ConfigValidationError } from "./config/validate.ts";
 
 /**
  * Represents the context for all phantom operations.
- * 
+ *
  * This context encapsulates the git repository root, loaded configuration,
  * and derived basePath, eliminating the need to pass basePath parameters
  * through multiple function calls.
@@ -33,23 +33,23 @@ export interface CreateContextResult {
 
 /**
  * Creates a PhantomContext by loading configuration and resolving basePath.
- * 
+ *
  * This function centralizes configuration loading logic that was previously
  * duplicated across multiple CLI handlers. Configuration errors are handled
  * gracefully, with warnings collected for optional display to users.
  *
  * @param gitRoot - The root directory of the git repository
  * @returns A context object with loaded configuration and resolved basePath
- * 
+ *
  * @example
  * ```typescript
  * const gitRoot = await getGitRoot();
  * const { context, configWarnings } = await createPhantomContext(gitRoot);
- * 
+ *
  * if (configWarnings) {
  *   configWarnings.forEach(warning => console.warn(warning));
  * }
- * 
+ *
  * // Use context in operations
  * await createWorktree(context, "my-worktree", options);
  * ```
@@ -67,9 +67,13 @@ export async function createPhantomContext(
     // Collect configuration warnings for validation and parse errors
     // ConfigNotFoundError remains silent as the config file is optional
     if (configResult.error instanceof ConfigValidationError) {
-      configWarnings.push(`Configuration warning: ${configResult.error.message}`);
+      configWarnings.push(
+        `Configuration warning: ${configResult.error.message}`,
+      );
     } else if (configResult.error instanceof ConfigParseError) {
-      configWarnings.push(`Configuration warning: ${configResult.error.message}`);
+      configWarnings.push(
+        `Configuration warning: ${configResult.error.message}`,
+      );
     }
   }
 
