@@ -1,12 +1,9 @@
 import { parseArgs } from "node:util";
 import {
-  ConfigNotFoundError,
-  ConfigParseError,
-  ConfigValidationError,
   WorktreeAlreadyExistsError,
+  createPhantomContext,
   createWorktree as createWorktreeCore,
   execInWorktree,
-  loadConfig,
   shellInWorktree,
 } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
@@ -109,24 +106,19 @@ export async function createHandler(args: string[]): Promise<void> {
   try {
     const gitRoot = await getGitRoot();
 
-    let filesToCopy: string[] = [];
-    let basePath: string | undefined;
+    // Create PhantomContext with centralized config loading
+    const { context, configWarnings } = await createPhantomContext(gitRoot);
 
+    // Display configuration warnings if any
+    if (configWarnings) {
+      configWarnings.forEach(warning => output.warn(warning));
+    }
+
+    let filesToCopy: string[] = [];
+    
     // Load files from config
-    const configResult = await loadConfig(gitRoot);
-    if (isOk(configResult)) {
-      if (configResult.value.postCreate?.copyFiles) {
-        filesToCopy = [...configResult.value.postCreate.copyFiles];
-      }
-      basePath = configResult.value.basePath;
-    } else {
-      // Display warning for validation and parse errors
-      if (configResult.error instanceof ConfigValidationError) {
-        output.warn(`Configuration warning: ${configResult.error.message}`);
-      } else if (configResult.error instanceof ConfigParseError) {
-        output.warn(`Configuration warning: ${configResult.error.message}`);
-      }
-      // ConfigNotFoundError remains silent as the config file is optional
+    if (context.config.postCreate?.copyFiles) {
+      filesToCopy = [...context.config.postCreate.copyFiles];
     }
 
     // Add files from CLI options
@@ -141,7 +133,7 @@ export async function createHandler(args: string[]): Promise<void> {
     const result = await createWorktreeCore(gitRoot, worktreeName, {
       copyFiles: filesToCopy.length > 0 ? filesToCopy : undefined,
       base: baseOption,
-      basePath,
+      basePath: context.basePath,
     });
 
     if (isErr(result)) {
@@ -161,8 +153,8 @@ export async function createHandler(args: string[]): Promise<void> {
     }
 
     // Execute post-create commands from config
-    if (isOk(configResult) && configResult.value.postCreate?.commands) {
-      const commands = configResult.value.postCreate.commands;
+    if (context.config.postCreate?.commands) {
+      const commands = context.config.postCreate.commands;
       output.log("\nRunning post-create commands...");
 
       for (const command of commands) {
@@ -172,7 +164,7 @@ export async function createHandler(args: string[]): Promise<void> {
           gitRoot,
           worktreeName,
           [shell, "-c", command],
-          { basePath },
+          { basePath: context.basePath },
         );
 
         if (isErr(cmdResult)) {
@@ -204,7 +196,7 @@ export async function createHandler(args: string[]): Promise<void> {
         gitRoot,
         worktreeName,
         [shell, "-c", execCommand],
-        { interactive: true, basePath },
+        { interactive: true, basePath: context.basePath },
       );
 
       if (isErr(execResult)) {
@@ -228,7 +220,7 @@ export async function createHandler(args: string[]): Promise<void> {
       const shellResult = await shellInWorktree(
         gitRoot,
         worktreeName,
-        basePath,
+        context.basePath,
       );
 
       if (isErr(shellResult)) {
