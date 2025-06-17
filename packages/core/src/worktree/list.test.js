@@ -3,12 +3,24 @@ import { describe, it, mock } from "node:test";
 
 const execFileMock = mock.fn();
 
-const getPhantomDirectoryMock = mock.fn(
-  (gitRoot) => `${gitRoot}/.git/phantom/worktrees`,
-);
-const getWorktreePathMock = mock.fn(
-  (gitRoot, name) => `${gitRoot}/.git/phantom/worktrees/${name}`,
-);
+const getPhantomDirectoryMock = mock.fn((gitRoot, basePath) => {
+  if (basePath) {
+    if (basePath.startsWith("/")) {
+      return basePath;
+    }
+    return `${gitRoot}/${basePath}`;
+  }
+  return `${gitRoot}/.git/phantom/worktrees`;
+});
+const getWorktreePathMock = mock.fn((gitRoot, name, basePath) => {
+  if (basePath) {
+    if (basePath.startsWith("/")) {
+      return `${basePath}/${name}`;
+    }
+    return `${gitRoot}/${basePath}/${name}`;
+  }
+  return `${gitRoot}/.git/phantom/worktrees/${name}`;
+});
 
 mock.module("node:child_process", {
   namedExports: {

@@ -7,9 +7,15 @@ const validateWorktreeNameMock = mock.fn();
 const existsSyncMock = mock.fn();
 const branchExistsMock = mock.fn();
 const attachWorktreeMock = mock.fn();
-const getWorktreePathMock = mock.fn(
-  (gitRoot, name) => `${gitRoot}/.git/phantom/worktrees/${name}`,
-);
+const getWorktreePathMock = mock.fn((gitRoot, name, basePath) => {
+  if (basePath) {
+    if (basePath.startsWith("/")) {
+      return `${basePath}/${name}`;
+    }
+    return `${gitRoot}/${basePath}/${name}`;
+  }
+  return `${gitRoot}/.git/phantom/worktrees/${name}`;
+});
 
 mock.module("./validate.ts", {
   namedExports: {
