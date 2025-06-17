@@ -47,14 +47,10 @@ export async function attachHandler(args: string[]): Promise<void> {
 
   const gitRoot = await getGitRoot();
 
-  // Load config to get basePath
-  let basePath: string | undefined;
-  const configResult = await loadConfig(gitRoot);
-  if (isOk(configResult)) {
-    basePath = configResult.value.basePath;
-  }
+  // Create PhantomContext with centralized config loading
+  const { context } = await createPhantomContext(gitRoot);
 
-  const result = await attachWorktreeCore(gitRoot, branchName, basePath);
+  const result = await attachWorktreeCore(gitRoot, branchName, context.basePath);
 
   if (isErr(result)) {
     const error = result.error;
@@ -71,7 +67,7 @@ export async function attachHandler(args: string[]): Promise<void> {
   output.log(`Attached phantom: ${branchName}`);
 
   if (values.shell) {
-    const shellResult = await shellInWorktree(gitRoot, branchName, basePath);
+    const shellResult = await shellInWorktree(gitRoot, branchName, context.basePath);
     if (isErr(shellResult)) {
       exitWithError(shellResult.error.message, exitCodes.generalError);
     }
@@ -81,7 +77,7 @@ export async function attachHandler(args: string[]): Promise<void> {
       gitRoot,
       branchName,
       [shell, "-c", values.exec],
-      { interactive: true, basePath },
+      { interactive: true, basePath: context.basePath },
     );
     if (isErr(execResult)) {
       exitWithError(execResult.error.message, exitCodes.generalError);

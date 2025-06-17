@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
 import {
+  createPhantomContext,
   listWorktrees as listWorktreesCore,
-  loadConfig,
   selectWorktreeWithFzf,
 } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
@@ -28,15 +28,11 @@ export async function listHandler(args: string[] = []): Promise<void> {
   try {
     const gitRoot = await getGitRoot();
 
-    // Load config to get basePath
-    let basePath: string | undefined;
-    const configResult = await loadConfig(gitRoot);
-    if (isOk(configResult)) {
-      basePath = configResult.value.basePath;
-    }
+    // Create PhantomContext with centralized config loading
+    const { context } = await createPhantomContext(gitRoot);
 
     if (values.fzf) {
-      const selectResult = await selectWorktreeWithFzf(gitRoot, basePath);
+      const selectResult = await selectWorktreeWithFzf(gitRoot, context.basePath);
 
       if (isErr(selectResult)) {
         exitWithError(selectResult.error.message, exitCodes.generalError);
@@ -46,7 +42,7 @@ export async function listHandler(args: string[] = []): Promise<void> {
         output.log(selectResult.value.name);
       }
     } else {
-      const result = await listWorktreesCore(gitRoot, basePath);
+      const result = await listWorktreesCore(gitRoot, context.basePath);
 
       if (isErr(result)) {
         exitWithError("Failed to list worktrees", exitCodes.generalError);

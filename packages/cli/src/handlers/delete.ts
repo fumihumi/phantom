@@ -2,8 +2,8 @@ import { parseArgs } from "node:util";
 import {
   WorktreeError,
   WorktreeNotFoundError,
+  createPhantomContext,
   deleteWorktree as deleteWorktreeCore,
-  loadConfig,
   selectWorktreeWithFzf,
 } from "@aku11i/phantom-core";
 import { getCurrentWorktree, getGitRoot } from "@aku11i/phantom-git";
@@ -60,12 +60,8 @@ export async function deleteHandler(args: string[]): Promise<void> {
   try {
     const gitRoot = await getGitRoot();
 
-    // Load config to get basePath
-    let basePath: string | undefined;
-    const configResult = await loadConfig(gitRoot);
-    if (isOk(configResult)) {
-      basePath = configResult.value.basePath;
-    }
+    // Create PhantomContext with centralized config loading
+    const { context } = await createPhantomContext(gitRoot);
 
     let worktreeName: string;
     if (deleteCurrent) {
@@ -78,7 +74,7 @@ export async function deleteHandler(args: string[]): Promise<void> {
       }
       worktreeName = currentWorktree;
     } else if (useFzf) {
-      const selectResult = await selectWorktreeWithFzf(gitRoot, basePath);
+      const selectResult = await selectWorktreeWithFzf(gitRoot, context.basePath);
       if (isErr(selectResult)) {
         exitWithError(selectResult.error.message, exitCodes.generalError);
       }
@@ -92,7 +88,7 @@ export async function deleteHandler(args: string[]): Promise<void> {
 
     const result = await deleteWorktreeCore(gitRoot, worktreeName, {
       force: forceDelete,
-      basePath,
+      basePath: context.basePath,
     });
 
     if (isErr(result)) {

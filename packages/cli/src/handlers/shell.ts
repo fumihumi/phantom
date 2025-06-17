@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
 import {
   WorktreeNotFoundError,
-  loadConfig,
+  createPhantomContext,
   selectWorktreeWithFzf,
   shellInWorktree as shellInWorktreeCore,
   validateWorktreeExists,
@@ -83,12 +83,8 @@ export async function shellHandler(args: string[]): Promise<void> {
   try {
     const gitRoot = await getGitRoot();
 
-    // Load config to get basePath
-    let basePath: string | undefined;
-    const configResult = await loadConfig(gitRoot);
-    if (isOk(configResult)) {
-      basePath = configResult.value.basePath;
-    }
+    // Create PhantomContext with centralized config loading
+    const { context } = await createPhantomContext(gitRoot);
 
     if (tmuxOption && !(await isInsideTmux())) {
       exitWithError(
@@ -98,7 +94,7 @@ export async function shellHandler(args: string[]): Promise<void> {
     }
 
     if (useFzf) {
-      const selectResult = await selectWorktreeWithFzf(gitRoot, basePath);
+      const selectResult = await selectWorktreeWithFzf(gitRoot, context.basePath);
       if (isErr(selectResult)) {
         exitWithError(selectResult.error.message, exitCodes.generalError);
       }
@@ -114,7 +110,7 @@ export async function shellHandler(args: string[]): Promise<void> {
     const validation = await validateWorktreeExists(
       gitRoot,
       worktreeName,
-      basePath,
+      context.basePath,
     );
     if (isErr(validation)) {
       exitWithError(validation.error.message, exitCodes.generalError);
@@ -154,7 +150,7 @@ export async function shellHandler(args: string[]): Promise<void> {
     );
     output.log("Type 'exit' to return to your original directory\n");
 
-    const result = await shellInWorktreeCore(gitRoot, worktreeName, basePath);
+    const result = await shellInWorktreeCore(gitRoot, worktreeName, context.basePath);
 
     if (isErr(result)) {
       const exitCode =
