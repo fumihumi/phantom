@@ -89,7 +89,7 @@ mock.module("../errors.ts", {
 
 const { createHandler } = await import("./create.ts");
 
-describe.skip("createHandler", () => {
+describe("createHandler", () => {
   const resetMocks = () => {
     // Reset all mocks
     exitMock.mock.resetCalls();

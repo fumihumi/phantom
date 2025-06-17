@@ -57,7 +57,7 @@ mock.module("../errors.ts", {
 
 const { listHandler } = await import("./list.ts");
 
-describe.skip("listHandler", () => {
+describe("listHandler", () => {
   const resetMocks = () => {
     exitMock.mock.resetCalls();
     consoleLogMock.mock.resetCalls();
