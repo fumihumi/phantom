@@ -8,12 +8,32 @@ const mkdirMock = mock.fn();
 const validateWorktreeDoesNotExistMock = mock.fn();
 const validateWorktreeNameMock = mock.fn();
 const addWorktreeMock = mock.fn();
-const getPhantomDirectoryMock = mock.fn(
-  (gitRoot) => `${gitRoot}/.git/phantom/worktrees`,
-);
-const getWorktreePathMock = mock.fn(
-  (gitRoot, name) => `${gitRoot}/.git/phantom/worktrees/${name}`,
-);
+const getPhantomDirectoryMock = mock.fn((gitRoot, basePath) => {
+  if (basePath) {
+    // Simulate node.js path.join behavior for resolving relative paths
+    if (basePath.startsWith("/")) {
+      return basePath;
+    }
+    // For relative paths like "../phantom-external", resolve them correctly
+    if (basePath === "../phantom-external") {
+      return "/test/phantom-external";
+    }
+    return `${gitRoot}/${basePath}`;
+  }
+  return `${gitRoot}/.git/phantom/worktrees`;
+});
+const getWorktreePathMock = mock.fn((gitRoot, name, basePath) => {
+  if (basePath) {
+    if (basePath.startsWith("/")) {
+      return `${basePath}/${name}`;
+    }
+    if (basePath === "../phantom-external") {
+      return `/test/phantom-external/${name}`;
+    }
+    return `${gitRoot}/${basePath}/${name}`;
+  }
+  return `${gitRoot}/.git/phantom/worktrees/${name}`;
+});
 const copyFilesMock = mock.fn();
 
 mock.module("node:fs/promises", {
@@ -177,5 +197,125 @@ describe("createWorktree", () => {
         "worktree add failed: fatal: branch already exists",
       );
     }
+  });
+
+  describe("with basePath", () => {
+    it("should create worktree with relative basePath", async () => {
+      resetMocks();
+      accessMock.mock.mockImplementation(() => Promise.resolve());
+      mkdirMock.mock.mockImplementation(() => Promise.resolve());
+      validateWorktreeNameMock.mock.mockImplementation(() => ok(undefined));
+      validateWorktreeDoesNotExistMock.mock.mockImplementation(() =>
+        Promise.resolve(
+          ok({
+            path: getWorktreePathMock(
+              "/test/repo",
+              "feature-branch",
+              "../phantom-external",
+            ),
+          }),
+        ),
+      );
+      addWorktreeMock.mock.mockImplementation(() => Promise.resolve());
+
+      const result = await createWorktree("/test/repo", "feature-branch", {
+        basePath: "../phantom-external",
+      });
+
+      strictEqual(isOk(result), true);
+      if (isOk(result)) {
+        deepStrictEqual(result.value, {
+          message:
+            "Created worktree 'feature-branch' at /test/phantom-external/feature-branch",
+          path: "/test/phantom-external/feature-branch",
+          copiedFiles: undefined,
+          skippedFiles: undefined,
+          copyError: undefined,
+        });
+      }
+
+      strictEqual(getPhantomDirectoryMock.mock.callCount(), 1);
+      deepStrictEqual(getPhantomDirectoryMock.mock.calls[0].arguments, [
+        "/test/repo",
+        "../phantom-external",
+      ]);
+
+      strictEqual(getWorktreePathMock.mock.callCount(), 2);
+      deepStrictEqual(getWorktreePathMock.mock.calls[0].arguments, [
+        "/test/repo",
+        "feature-branch",
+        "../phantom-external",
+      ]);
+    });
+
+    it("should create worktree with absolute basePath", async () => {
+      resetMocks();
+      accessMock.mock.mockImplementation(() => Promise.resolve());
+      mkdirMock.mock.mockImplementation(() => Promise.resolve());
+      validateWorktreeNameMock.mock.mockImplementation(() => ok(undefined));
+      validateWorktreeDoesNotExistMock.mock.mockImplementation(() =>
+        Promise.resolve(
+          ok({
+            path: getWorktreePathMock(
+              "/test/repo",
+              "feature-branch",
+              "/tmp/phantom-worktrees",
+            ),
+          }),
+        ),
+      );
+      addWorktreeMock.mock.mockImplementation(() => Promise.resolve());
+
+      const result = await createWorktree("/test/repo", "feature-branch", {
+        basePath: "/tmp/phantom-worktrees",
+      });
+
+      strictEqual(isOk(result), true);
+      if (isOk(result)) {
+        deepStrictEqual(result.value, {
+          message:
+            "Created worktree 'feature-branch' at /tmp/phantom-worktrees/feature-branch",
+          path: "/tmp/phantom-worktrees/feature-branch",
+          copiedFiles: undefined,
+          skippedFiles: undefined,
+          copyError: undefined,
+        });
+      }
+
+      strictEqual(getPhantomDirectoryMock.mock.callCount(), 1);
+      deepStrictEqual(getPhantomDirectoryMock.mock.calls[0].arguments, [
+        "/test/repo",
+        "/tmp/phantom-worktrees",
+      ]);
+    });
+
+    it("should pass basePath to validateWorktreeDoesNotExist", async () => {
+      resetMocks();
+      accessMock.mock.mockImplementation(() => Promise.resolve());
+      mkdirMock.mock.mockImplementation(() => Promise.resolve());
+      validateWorktreeNameMock.mock.mockImplementation(() => ok(undefined));
+      validateWorktreeDoesNotExistMock.mock.mockImplementation(() =>
+        Promise.resolve(
+          ok({
+            path: getWorktreePathMock(
+              "/test/repo",
+              "feature-branch",
+              "../phantom-external",
+            ),
+          }),
+        ),
+      );
+      addWorktreeMock.mock.mockImplementation(() => Promise.resolve());
+
+      await createWorktree("/test/repo", "feature-branch", {
+        basePath: "../phantom-external",
+      });
+
+      strictEqual(validateWorktreeDoesNotExistMock.mock.callCount(), 1);
+      deepStrictEqual(
+        validateWorktreeDoesNotExistMock.mock.calls[0].arguments,
+        ["/test/repo", "feature-branch", "../phantom-external"],
+      );
+    });
   });
 });

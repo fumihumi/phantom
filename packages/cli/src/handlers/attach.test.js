@@ -46,6 +46,9 @@ mock.module("@aku11i/phantom-core", {
     WorktreeAlreadyExistsError,
     shellInWorktree: shellInWorktreeMock,
     execInWorktree: execInWorktreeMock,
+    loadConfig: mock.fn(() =>
+      Promise.resolve({ ok: false, error: new Error("Config not found") }),
+    ),
   },
 });
 
@@ -70,6 +73,7 @@ describe("attachHandler", () => {
     deepStrictEqual(attachWorktreeCoreMock.mock.calls[0].arguments, [
       "/repo",
       "feature",
+      undefined,
     ]);
   });
 
@@ -137,6 +141,7 @@ describe("attachHandler", () => {
     deepStrictEqual(shellInWorktreeMock.mock.calls[0].arguments, [
       "/repo",
       "feature",
+      undefined,
     ]);
   });
 

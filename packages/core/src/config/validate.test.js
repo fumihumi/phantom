@@ -89,6 +89,49 @@ describe("validateConfig", () => {
     }
   });
 
+  test("should accept config with basePath", () => {
+    const config = {
+      basePath: "../phantom-worktrees",
+    };
+
+    const result = validateConfig(config);
+
+    assert.strictEqual(isOk(result), true);
+    if (isOk(result)) {
+      assert.deepStrictEqual(result.value, config);
+    }
+  });
+
+  test("should accept config with absolute basePath", () => {
+    const config = {
+      basePath: "/tmp/phantom-worktrees",
+    };
+
+    const result = validateConfig(config);
+
+    assert.strictEqual(isOk(result), true);
+    if (isOk(result)) {
+      assert.deepStrictEqual(result.value, config);
+    }
+  });
+
+  test("should accept config with basePath and postCreate", () => {
+    const config = {
+      basePath: "../custom-phantom",
+      postCreate: {
+        copyFiles: [".env"],
+        commands: ["pnpm install"],
+      },
+    };
+
+    const result = validateConfig(config);
+
+    assert.strictEqual(isOk(result), true);
+    if (isOk(result)) {
+      assert.deepStrictEqual(result.value, config);
+    }
+  });
+
   test("should accept config with empty commands array", () => {
     const config = {
       postCreate: {
@@ -432,6 +475,71 @@ describe("validateConfig", () => {
         );
       }
     });
+
+    test("should reject when basePath is number", () => {
+      const result = validateConfig({ basePath: 123 });
+
+      assert.strictEqual(isErr(result), true);
+      if (isErr(result)) {
+        assert.ok(result.error instanceof ConfigValidationError);
+        assert.strictEqual(
+          result.error.message,
+          "Invalid phantom.config.json: basePath: Expected string, received number",
+        );
+      }
+    });
+
+    test("should reject when basePath is object", () => {
+      const result = validateConfig({ basePath: {} });
+
+      assert.strictEqual(isErr(result), true);
+      if (isErr(result)) {
+        assert.ok(result.error instanceof ConfigValidationError);
+        assert.strictEqual(
+          result.error.message,
+          "Invalid phantom.config.json: basePath: Expected string, received object",
+        );
+      }
+    });
+
+    test("should reject when basePath is array", () => {
+      const result = validateConfig({ basePath: [] });
+
+      assert.strictEqual(isErr(result), true);
+      if (isErr(result)) {
+        assert.ok(result.error instanceof ConfigValidationError);
+        assert.strictEqual(
+          result.error.message,
+          "Invalid phantom.config.json: basePath: Expected string, received array",
+        );
+      }
+    });
+
+    test("should reject when basePath is null", () => {
+      const result = validateConfig({ basePath: null });
+
+      assert.strictEqual(isErr(result), true);
+      if (isErr(result)) {
+        assert.ok(result.error instanceof ConfigValidationError);
+        assert.strictEqual(
+          result.error.message,
+          "Invalid phantom.config.json: basePath: Expected string, received null",
+        );
+      }
+    });
+
+    test("should reject when basePath is boolean", () => {
+      const result = validateConfig({ basePath: true });
+
+      assert.strictEqual(isErr(result), true);
+      if (isErr(result)) {
+        assert.ok(result.error instanceof ConfigValidationError);
+        assert.strictEqual(
+          result.error.message,
+          "Invalid phantom.config.json: basePath: Expected string, received boolean",
+        );
+      }
+    });
   });
 
   describe("edge cases", () => {
@@ -491,6 +599,45 @@ describe("validateConfig", () => {
             "file.with.dots.md",
           ],
         },
+      };
+
+      const result = validateConfig(config);
+
+      assert.strictEqual(isOk(result), true);
+      if (isOk(result)) {
+        assert.deepStrictEqual(result.value, config);
+      }
+    });
+
+    test("should accept basePath with empty string", () => {
+      const config = {
+        basePath: "",
+      };
+
+      const result = validateConfig(config);
+
+      assert.strictEqual(isOk(result), true);
+      if (isOk(result)) {
+        assert.deepStrictEqual(result.value, config);
+      }
+    });
+
+    test("should accept basePath with special characters", () => {
+      const config = {
+        basePath: "../phantom-worktrees/custom_dir",
+      };
+
+      const result = validateConfig(config);
+
+      assert.strictEqual(isOk(result), true);
+      if (isOk(result)) {
+        assert.deepStrictEqual(result.value, config);
+      }
+    });
+
+    test("should accept basePath with Windows-style path", () => {
+      const config = {
+        basePath: "C:\\temp\\phantom-worktrees",
       };
 
       const result = validateConfig(config);

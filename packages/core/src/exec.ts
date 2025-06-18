@@ -12,6 +12,7 @@ export type ExecInWorktreeSuccess = SpawnSuccess;
 
 export interface ExecInWorktreeOptions {
   interactive?: boolean;
+  basePath?: string;
 }
 
 export async function execInWorktree(
@@ -22,7 +23,11 @@ export async function execInWorktree(
 ): Promise<
   Result<ExecInWorktreeSuccess, WorktreeNotFoundError | ProcessError>
 > {
-  const validation = await validateWorktreeExists(gitRoot, worktreeName);
+  const validation = await validateWorktreeExists(
+    gitRoot,
+    worktreeName,
+    options.basePath,
+  );
   if (isErr(validation)) {
     return err(validation.error);
   }

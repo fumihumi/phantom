@@ -36,6 +36,9 @@ mock.module("@aku11i/phantom-core", {
     whereWorktree: whereWorktreeMock,
     selectWorktreeWithFzf: selectWorktreeWithFzfMock,
     WorktreeNotFoundError,
+    loadConfig: mock.fn(() =>
+      Promise.resolve({ ok: false, error: new Error("Config not found") }),
+    ),
   },
 });
 

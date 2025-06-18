@@ -1,9 +1,20 @@
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 
-export function getPhantomDirectory(gitRoot: string): string {
+export function getPhantomDirectory(
+  gitRoot: string,
+  basePath?: string,
+): string {
+  if (basePath) {
+    // If basePath is absolute, use it as-is. If relative, resolve from gitRoot
+    return isAbsolute(basePath) ? basePath : join(gitRoot, basePath);
+  }
   return join(gitRoot, ".git", "phantom", "worktrees");
 }
 
-export function getWorktreePath(gitRoot: string, name: string): string {
-  return join(getPhantomDirectory(gitRoot), name);
+export function getWorktreePath(
+  gitRoot: string,
+  name: string,
+  basePath?: string,
+): string {
+  return join(getPhantomDirectory(gitRoot, basePath), name);
 }

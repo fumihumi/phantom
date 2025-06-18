@@ -13,6 +13,7 @@ export interface CreateWorktreeOptions {
   branch?: string;
   base?: string;
   copyFiles?: string[];
+  basePath?: string;
 }
 
 export interface CreateWorktreeSuccess {
@@ -35,10 +36,10 @@ export async function createWorktree(
     return nameValidation;
   }
 
-  const { branch = name, base = "HEAD" } = options;
+  const { branch = name, base = "HEAD", basePath } = options;
 
-  const worktreesPath = getPhantomDirectory(gitRoot);
-  const worktreePath = getWorktreePath(gitRoot, name);
+  const worktreesPath = getPhantomDirectory(gitRoot, basePath);
+  const worktreePath = getWorktreePath(gitRoot, name, basePath);
 
   try {
     await fs.access(worktreesPath);
@@ -46,7 +47,11 @@ export async function createWorktree(
     await fs.mkdir(worktreesPath, { recursive: true });
   }
 
-  const validation = await validateWorktreeDoesNotExist(gitRoot, name);
+  const validation = await validateWorktreeDoesNotExist(
+    gitRoot,
+    name,
+    basePath,
+  );
   if (isErr(validation)) {
     return err(validation.error);
   }
