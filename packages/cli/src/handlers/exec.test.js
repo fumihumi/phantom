@@ -52,9 +52,18 @@ mock.module("@aku11i/phantom-core", {
     selectWorktreeWithFzf: selectWorktreeWithFzfMock,
     execInWorktree: execInWorktreeMock,
     WorktreeNotFoundError,
+    createContext: mock.fn((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+      }),
+    ),
     loadConfig: mock.fn(() =>
       Promise.resolve({ ok: false, error: new Error("Config not found") }),
     ),
+    getWorktreesDirectory: mock.fn((gitRoot, worktreesDirectory) => {
+      return worktreesDirectory || `${gitRoot}/.git/phantom/worktrees`;
+    }),
   },
 });
 
@@ -334,7 +343,8 @@ describe("execHandler", () => {
     strictEqual(execInWorktreeMock.mock.calls.length, 1);
     const execCall = execInWorktreeMock.mock.calls[0];
     strictEqual(execCall.arguments[0], "/repo");
-    strictEqual(execCall.arguments[1], "feature");
-    strictEqual(execCall.arguments[2].join(" "), "npm test");
+    strictEqual(execCall.arguments[1], "/repo/.git/phantom/worktrees");
+    strictEqual(execCall.arguments[2], "feature");
+    strictEqual(execCall.arguments[3].join(" "), "npm test");
   });
 });

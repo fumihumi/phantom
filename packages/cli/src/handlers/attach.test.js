@@ -46,9 +46,18 @@ mock.module("@aku11i/phantom-core", {
     WorktreeAlreadyExistsError,
     shellInWorktree: shellInWorktreeMock,
     execInWorktree: execInWorktreeMock,
+    createContext: mock.fn((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+      }),
+    ),
     loadConfig: mock.fn(() =>
       Promise.resolve({ ok: false, error: new Error("Config not found") }),
     ),
+    getWorktreesDirectory: mock.fn((gitRoot, worktreesDirectory) => {
+      return worktreesDirectory || `${gitRoot}/.git/phantom/worktrees`;
+    }),
   },
 });
 
@@ -72,8 +81,8 @@ describe("attachHandler", () => {
     );
     deepStrictEqual(attachWorktreeCoreMock.mock.calls[0].arguments, [
       "/repo",
+      "/repo/.git/phantom/worktrees",
       "feature",
-      undefined,
     ]);
   });
 
@@ -140,8 +149,8 @@ describe("attachHandler", () => {
 
     deepStrictEqual(shellInWorktreeMock.mock.calls[0].arguments, [
       "/repo",
+      "/repo/.git/phantom/worktrees",
       "feature",
-      undefined,
     ]);
   });
 
@@ -161,8 +170,12 @@ describe("attachHandler", () => {
     await attachHandler(["feature", "--exec", "echo hello"]);
 
     deepStrictEqual(execInWorktreeMock.mock.calls[0].arguments[0], "/repo");
-    deepStrictEqual(execInWorktreeMock.mock.calls[0].arguments[1], "feature");
-    const execArgs = execInWorktreeMock.mock.calls[0].arguments[2];
+    deepStrictEqual(
+      execInWorktreeMock.mock.calls[0].arguments[1],
+      "/repo/.git/phantom/worktrees",
+    );
+    deepStrictEqual(execInWorktreeMock.mock.calls[0].arguments[2], "feature");
+    const execArgs = execInWorktreeMock.mock.calls[0].arguments[3];
     deepStrictEqual(execArgs[0], "/bin/bash");
     deepStrictEqual(execArgs[1], "-c");
     deepStrictEqual(execArgs[2], "echo hello");

@@ -1,4 +1,4 @@
-import { createWorktree } from "@aku11i/phantom-core";
+import { createContext, createWorktree } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
 import { isOk } from "@aku11i/phantom-shared";
 import { z } from "zod";
@@ -20,10 +20,16 @@ export const createWorktreeTool: Tool<typeof schema> = {
   inputSchema: schema,
   handler: async ({ name, baseBranch }) => {
     const gitRoot = await getGitRoot();
-    const result = await createWorktree(gitRoot, name, {
-      branch: name,
-      base: baseBranch,
-    });
+    const context = await createContext(gitRoot);
+    const result = await createWorktree(
+      context.gitRoot,
+      context.worktreesDirectory,
+      name,
+      {
+        branch: name,
+        base: baseBranch,
+      },
+    );
 
     if (!isOk(result)) {
       throw new Error(result.error.message);

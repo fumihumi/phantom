@@ -1,8 +1,9 @@
 import {
   WorktreeAlreadyExistsError,
+  createContext,
   createWorktree as createWorktreeCore,
+  getWorktreePathFromDirectory,
 } from "@aku11i/phantom-core";
-import { getWorktreePath } from "@aku11i/phantom-core/src/paths.ts";
 import { getGitRoot } from "@aku11i/phantom-git";
 import { type Result, err, isErr, ok } from "@aku11i/phantom-shared";
 import { type GitHubIssue, isPullRequest } from "../api/index.ts";
@@ -21,17 +22,27 @@ export async function checkoutIssue(
   }
 
   const gitRoot = await getGitRoot();
+  const context = await createContext(gitRoot);
   const worktreeName = `issue-${issue.number}`;
   const branchName = `issue-${issue.number}`;
-  const worktreePath = getWorktreePath(gitRoot, worktreeName);
 
-  const result = await createWorktreeCore(gitRoot, worktreeName, {
-    branch: branchName,
-    base,
-  });
+  const result = await createWorktreeCore(
+    context.gitRoot,
+    context.worktreesDirectory,
+    worktreeName,
+    {
+      branch: branchName,
+      base,
+    },
+  );
 
   if (isErr(result)) {
     if (result.error instanceof WorktreeAlreadyExistsError) {
+      // For already exists case, we need to construct the path
+      const worktreePath = getWorktreePathFromDirectory(
+        context.worktreesDirectory,
+        worktreeName,
+      );
       return ok({
         message: `Worktree for issue #${issue.number} is already checked out`,
         worktree: worktreeName,
@@ -45,6 +56,6 @@ export async function checkoutIssue(
   return ok({
     message: result.value.message,
     worktree: worktreeName,
-    path: worktreePath,
+    path: result.value.path,
   });
 }

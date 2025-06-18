@@ -34,10 +34,13 @@ describe("execInWorktree", () => {
       Promise.resolve(ok({ exitCode: 0 })),
     );
 
-    const result = await execInWorktree("/test/repo", "my-feature", [
-      "npm",
-      "test",
-    ]);
+    const result = await execInWorktree(
+      "/test/repo",
+      "/test/repo/.git/phantom/worktrees",
+      "my-feature",
+      ["npm", "test"],
+      {},
+    );
 
     strictEqual(isOk(result), true);
     if (isOk(result)) {
@@ -61,10 +64,13 @@ describe("execInWorktree", () => {
       Promise.resolve(err(new WorktreeNotFoundError("non-existent"))),
     );
 
-    const result = await execInWorktree("/test/repo", "non-existent", [
-      "npm",
-      "test",
-    ]);
+    const result = await execInWorktree(
+      "/test/repo",
+      "/test/repo/.git/phantom/worktrees",
+      "non-existent",
+      ["npm", "test"],
+      {},
+    );
 
     strictEqual(isErr(result), true);
     if (isErr(result)) {
@@ -87,7 +93,13 @@ describe("execInWorktree", () => {
       Promise.resolve(ok({ exitCode: 0 })),
     );
 
-    await execInWorktree("/test/repo", "feature", ["ls"]);
+    await execInWorktree(
+      "/test/repo",
+      "/test/repo/.git/phantom/worktrees",
+      "feature",
+      ["ls"],
+      {},
+    );
 
     deepStrictEqual(spawnMock.mock.calls[0].arguments[0], {
       command: "ls",
@@ -113,9 +125,15 @@ describe("execInWorktree", () => {
       Promise.resolve(ok({ exitCode: 0 })),
     );
 
-    await execInWorktree("/test/repo", "feature", ["echo", "test"], {
-      interactive: true,
-    });
+    await execInWorktree(
+      "/test/repo",
+      "/test/repo/.git/phantom/worktrees",
+      "feature",
+      ["echo", "test"],
+      {
+        interactive: true,
+      },
+    );
 
     deepStrictEqual(spawnMock.mock.calls[0].arguments[0], {
       command: "echo",
@@ -139,7 +157,13 @@ describe("execInWorktree", () => {
       Promise.resolve(err(new ProcessExecutionError("false", 1))),
     );
 
-    const result = await execInWorktree("/test/repo", "feature", ["false"]);
+    const result = await execInWorktree(
+      "/test/repo",
+      "/test/repo/.git/phantom/worktrees",
+      "feature",
+      ["false"],
+      {},
+    );
 
     strictEqual(isErr(result), true);
     if (isErr(result)) {

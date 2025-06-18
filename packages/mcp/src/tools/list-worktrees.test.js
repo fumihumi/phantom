@@ -3,6 +3,7 @@ import { describe, it, mock } from "node:test";
 import { z } from "zod";
 
 const listWorktreesMock = mock.fn();
+const createContextMock = mock.fn();
 const getGitRootMock = mock.fn();
 const isOkMock = mock.fn((result) => {
   return result && result.ok === true;
@@ -13,6 +14,7 @@ const errMock = mock.fn((error) => ({ ok: false, error }));
 mock.module("@aku11i/phantom-core", {
   namedExports: {
     listWorktrees: listWorktreesMock,
+    createContext: createContextMock,
   },
 });
 
@@ -81,6 +83,12 @@ describe("listWorktreesTool", () => {
     ];
 
     getGitRootMock.mock.mockImplementation(() => Promise.resolve(gitRoot));
+    createContextMock.mock.mockImplementation(() =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: "/path/to/repo/.git/phantom/worktrees",
+      }),
+    );
     listWorktreesMock.mock.mockImplementation(() =>
       Promise.resolve(okMock({ worktrees: mockWorktrees })),
     );
@@ -89,7 +97,10 @@ describe("listWorktreesTool", () => {
 
     strictEqual(getGitRootMock.mock.calls.length, 1);
     strictEqual(listWorktreesMock.mock.calls.length, 1);
-    deepStrictEqual(listWorktreesMock.mock.calls[0].arguments, [gitRoot]);
+    deepStrictEqual(listWorktreesMock.mock.calls[0].arguments, [
+      gitRoot,
+      "/path/to/repo/.git/phantom/worktrees",
+    ]);
 
     strictEqual(result.content.length, 1);
     strictEqual(result.content[0].type, "text");
@@ -125,6 +136,12 @@ describe("listWorktreesTool", () => {
     const gitRoot = "/path/to/repo";
 
     getGitRootMock.mock.mockImplementation(() => Promise.resolve(gitRoot));
+    createContextMock.mock.mockImplementation(() =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: "/path/to/repo/.git/phantom/worktrees",
+      }),
+    );
     listWorktreesMock.mock.mockImplementation(() =>
       Promise.resolve(okMock({ worktrees: [] })),
     );
@@ -146,6 +163,12 @@ describe("listWorktreesTool", () => {
     const errorResult = { ok: false, error: { message: "Git command failed" } };
 
     getGitRootMock.mock.mockImplementation(() => Promise.resolve(gitRoot));
+    createContextMock.mock.mockImplementation(() =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: "/path/to/repo/.git/phantom/worktrees",
+      }),
+    );
     listWorktreesMock.mock.mockImplementation(() =>
       Promise.resolve(errorResult),
     );

@@ -8,7 +8,7 @@ export interface PhantomConfig {
     copyFiles?: string[];
     commands?: string[];
   };
-  basePath?: string;
+  worktreesDirectory?: string;
 }
 
 export class ConfigNotFoundError extends Error {

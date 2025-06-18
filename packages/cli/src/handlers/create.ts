@@ -4,6 +4,7 @@ import {
   ConfigParseError,
   ConfigValidationError,
   WorktreeAlreadyExistsError,
+  createContext,
   createWorktree as createWorktreeCore,
   execInWorktree,
   loadConfig,
@@ -108,9 +109,9 @@ export async function createHandler(args: string[]): Promise<void> {
 
   try {
     const gitRoot = await getGitRoot();
+    const context = await createContext(gitRoot);
 
     let filesToCopy: string[] = [];
-    let basePath: string | undefined;
 
     // Load files from config
     const configResult = await loadConfig(gitRoot);
@@ -118,7 +119,6 @@ export async function createHandler(args: string[]): Promise<void> {
       if (configResult.value.postCreate?.copyFiles) {
         filesToCopy = [...configResult.value.postCreate.copyFiles];
       }
-      basePath = configResult.value.basePath;
     } else {
       // Display warning for validation and parse errors
       if (configResult.error instanceof ConfigValidationError) {
@@ -138,11 +138,15 @@ export async function createHandler(args: string[]): Promise<void> {
       filesToCopy = [...new Set([...filesToCopy, ...cliFiles])];
     }
 
-    const result = await createWorktreeCore(gitRoot, worktreeName, {
-      copyFiles: filesToCopy.length > 0 ? filesToCopy : undefined,
-      base: baseOption,
-      basePath,
-    });
+    const result = await createWorktreeCore(
+      context.gitRoot,
+      context.worktreesDirectory,
+      worktreeName,
+      {
+        copyFiles: filesToCopy.length > 0 ? filesToCopy : undefined,
+        base: baseOption,
+      },
+    );
 
     if (isErr(result)) {
       const exitCode =
@@ -169,10 +173,10 @@ export async function createHandler(args: string[]): Promise<void> {
         output.log(`Executing: ${command}`);
         const shell = process.env.SHELL || "/bin/sh";
         const cmdResult = await execInWorktree(
-          gitRoot,
+          context.gitRoot,
+          context.worktreesDirectory,
           worktreeName,
           [shell, "-c", command],
-          { basePath },
         );
 
         if (isErr(cmdResult)) {
@@ -201,10 +205,11 @@ export async function createHandler(args: string[]): Promise<void> {
 
       const shell = process.env.SHELL || "/bin/sh";
       const execResult = await execInWorktree(
-        gitRoot,
+        context.gitRoot,
+        context.worktreesDirectory,
         worktreeName,
         [shell, "-c", execCommand],
-        { interactive: true, basePath },
+        { interactive: true },
       );
 
       if (isErr(execResult)) {
@@ -226,9 +231,9 @@ export async function createHandler(args: string[]): Promise<void> {
       output.log("Type 'exit' to return to your original directory\n");
 
       const shellResult = await shellInWorktree(
-        gitRoot,
+        context.gitRoot,
+        context.worktreesDirectory,
         worktreeName,
-        basePath,
       );
 
       if (isErr(shellResult)) {

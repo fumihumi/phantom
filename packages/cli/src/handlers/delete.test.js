@@ -39,9 +39,18 @@ mock.module("@aku11i/phantom-core", {
     selectWorktreeWithFzf: selectWorktreeWithFzfMock,
     WorktreeError,
     WorktreeNotFoundError,
+    createContext: mock.fn((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+      }),
+    ),
     loadConfig: mock.fn(() =>
       Promise.resolve({ ok: false, error: new Error("Config not found") }),
     ),
+    getWorktreesDirectory: mock.fn((gitRoot, worktreesDirectory) => {
+      return worktreesDirectory || `${gitRoot}/.git/phantom/worktrees`;
+    }),
   },
 });
 
@@ -100,8 +109,12 @@ describe("deleteHandler", () => {
 
     strictEqual(deleteWorktreeMock.mock.calls.length, 1);
     strictEqual(deleteWorktreeMock.mock.calls[0].arguments[0], "/test/repo");
-    strictEqual(deleteWorktreeMock.mock.calls[0].arguments[1], "feature");
-    const deleteOptions = deleteWorktreeMock.mock.calls[0].arguments[2];
+    strictEqual(
+      deleteWorktreeMock.mock.calls[0].arguments[1],
+      "/test/repo/.git/phantom/worktrees",
+    );
+    strictEqual(deleteWorktreeMock.mock.calls[0].arguments[2], "feature");
+    const deleteOptions = deleteWorktreeMock.mock.calls[0].arguments[3];
     strictEqual(deleteOptions.force, false);
 
     strictEqual(consoleLogMock.mock.calls.length, 1);
@@ -140,8 +153,12 @@ describe("deleteHandler", () => {
 
     strictEqual(deleteWorktreeMock.mock.calls.length, 1);
     strictEqual(deleteWorktreeMock.mock.calls[0].arguments[0], "/test/repo");
-    strictEqual(deleteWorktreeMock.mock.calls[0].arguments[1], "issue-93");
-    const deleteOptions = deleteWorktreeMock.mock.calls[0].arguments[2];
+    strictEqual(
+      deleteWorktreeMock.mock.calls[0].arguments[1],
+      "/test/repo/.git/phantom/worktrees",
+    );
+    strictEqual(deleteWorktreeMock.mock.calls[0].arguments[2], "issue-93");
+    const deleteOptions = deleteWorktreeMock.mock.calls[0].arguments[3];
     strictEqual(deleteOptions.force, false);
 
     strictEqual(consoleLogMock.mock.calls.length, 1);
@@ -233,7 +250,7 @@ describe("deleteHandler", () => {
     );
 
     strictEqual(deleteWorktreeMock.mock.calls.length, 1);
-    const deleteOptions = deleteWorktreeMock.mock.calls[0].arguments[2];
+    const deleteOptions = deleteWorktreeMock.mock.calls[0].arguments[3];
     strictEqual(deleteOptions.force, true);
 
     strictEqual(consoleLogMock.mock.calls.length, 1);

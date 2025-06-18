@@ -5,6 +5,8 @@ const getGitRootMock = mock.fn();
 const fetchMock = mock.fn();
 const attachWorktreeCoreMock = mock.fn();
 const setUpstreamBranchMock = mock.fn();
+const createContextMock = mock.fn();
+const getWorktreePathFromDirectoryMock = mock.fn();
 
 // Mock the WorktreeAlreadyExistsError class
 class MockWorktreeAlreadyExistsError extends Error {
@@ -26,6 +28,8 @@ mock.module("@aku11i/phantom-core", {
   namedExports: {
     attachWorktreeCore: attachWorktreeCoreMock,
     WorktreeAlreadyExistsError: MockWorktreeAlreadyExistsError,
+    createContext: createContextMock,
+    getWorktreePathFromDirectory: getWorktreePathFromDirectoryMock,
   },
 });
 
@@ -68,6 +72,10 @@ describe("checkoutPullRequest", () => {
     };
 
     getGitRootMock.mock.mockImplementation(async () => mockGitRoot);
+    createContextMock.mock.mockImplementation(async () => ({
+      gitRoot: mockGitRoot,
+      worktreesDirectory: `${mockGitRoot}/.git/phantom/worktrees`,
+    }));
     fetchMock.mock.mockImplementation(async () => ({
       ok: true,
       value: undefined,
@@ -107,9 +115,10 @@ describe("checkoutPullRequest", () => {
     equal(upstreamArgs[2], "origin/feature-branch");
 
     // Verify attach was called with correct parameters
-    const [gitRoot, worktreeName] =
+    const [gitRoot, worktreeDirectory, worktreeName] =
       attachWorktreeCoreMock.mock.calls[0].arguments;
     equal(gitRoot, mockGitRoot);
+    equal(worktreeDirectory, "/path/to/repo/.git/phantom/worktrees");
     equal(worktreeName, "pr-123");
   });
 
@@ -133,6 +142,10 @@ describe("checkoutPullRequest", () => {
     };
 
     getGitRootMock.mock.mockImplementation(async () => mockGitRoot);
+    createContextMock.mock.mockImplementation(async () => ({
+      gitRoot: mockGitRoot,
+      worktreesDirectory: `${mockGitRoot}/.git/phantom/worktrees`,
+    }));
     fetchMock.mock.mockImplementation(async () => ({
       ok: true,
       value: undefined,
@@ -145,6 +158,9 @@ describe("checkoutPullRequest", () => {
       ok: true,
       value: undefined,
     }));
+    getWorktreePathFromDirectoryMock.mock.mockImplementation(
+      (dir, name) => `${dir}/${name}`,
+    );
 
     const result = await checkoutPullRequest(mockPullRequest);
 
@@ -177,6 +193,10 @@ describe("checkoutPullRequest", () => {
     };
 
     getGitRootMock.mock.mockImplementation(async () => mockGitRoot);
+    createContextMock.mock.mockImplementation(async () => ({
+      gitRoot: mockGitRoot,
+      worktreesDirectory: `${mockGitRoot}/.git/phantom/worktrees`,
+    }));
     fetchMock.mock.mockImplementation(async () => ({
       ok: true,
       value: undefined,
@@ -221,6 +241,10 @@ describe("checkoutPullRequest", () => {
     };
 
     getGitRootMock.mock.mockImplementation(async () => mockGitRoot);
+    createContextMock.mock.mockImplementation(async () => ({
+      gitRoot: mockGitRoot,
+      worktreesDirectory: `${mockGitRoot}/.git/phantom/worktrees`,
+    }));
     fetchMock.mock.mockImplementation(async () => ({
       ok: true,
       value: undefined,
@@ -236,7 +260,9 @@ describe("checkoutPullRequest", () => {
 
     await checkoutPullRequest(mockPullRequest);
 
-    const [, worktreeName] = attachWorktreeCoreMock.mock.calls[0].arguments;
+    const [, worktreeDirectory, worktreeName] =
+      attachWorktreeCoreMock.mock.calls[0].arguments;
+    equal(worktreeDirectory, "/path/to/repo/.git/phantom/worktrees");
     equal(worktreeName, "pr-999");
   });
 
@@ -260,6 +286,10 @@ describe("checkoutPullRequest", () => {
     };
 
     getGitRootMock.mock.mockImplementation(async () => mockGitRoot);
+    createContextMock.mock.mockImplementation(async () => ({
+      gitRoot: mockGitRoot,
+      worktreesDirectory: `${mockGitRoot}/.git/phantom/worktrees`,
+    }));
     fetchMock.mock.mockImplementation(async () => ({
       ok: true,
       value: undefined,
@@ -285,7 +315,9 @@ describe("checkoutPullRequest", () => {
     const fetchOptions = fetchMock.mock.calls[0].arguments[0];
     equal(fetchOptions.refspec, "pull/1234/head:pr-1234");
 
-    const [, worktreeName] = attachWorktreeCoreMock.mock.calls[0].arguments;
+    const [, worktreeDirectory, worktreeName] =
+      attachWorktreeCoreMock.mock.calls[0].arguments;
+    equal(worktreeDirectory, "/path/to/repo/.git/phantom/worktrees");
     equal(worktreeName, "pr-1234");
 
     // Verify upstream was set correctly for forked PR
@@ -315,6 +347,10 @@ describe("checkoutPullRequest", () => {
     };
 
     getGitRootMock.mock.mockImplementation(async () => mockGitRoot);
+    createContextMock.mock.mockImplementation(async () => ({
+      gitRoot: mockGitRoot,
+      worktreesDirectory: `${mockGitRoot}/.git/phantom/worktrees`,
+    }));
     fetchMock.mock.mockImplementation(async () => ({
       ok: false,
       error: new Error("Could not find remote ref"),

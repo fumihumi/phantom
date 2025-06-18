@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import { type Result, err, ok } from "@aku11i/phantom-shared";
-import { getPhantomDirectory, getWorktreePath } from "../paths.ts";
+import { getWorktreePathFromDirectory } from "../paths.ts";
 import { WorktreeAlreadyExistsError, WorktreeNotFoundError } from "./errors.ts";
 
 export interface WorktreeExistsSuccess {
@@ -13,10 +13,10 @@ export interface WorktreeDoesNotExistSuccess {
 
 export async function validateWorktreeExists(
   gitRoot: string,
+  worktreeDirectory: string,
   name: string,
-  basePath?: string,
 ): Promise<Result<WorktreeExistsSuccess, WorktreeNotFoundError>> {
-  const worktreePath = getWorktreePath(gitRoot, name, basePath);
+  const worktreePath = getWorktreePathFromDirectory(worktreeDirectory, name);
 
   try {
     await fs.access(worktreePath);
@@ -28,10 +28,10 @@ export async function validateWorktreeExists(
 
 export async function validateWorktreeDoesNotExist(
   gitRoot: string,
+  worktreeDirectory: string,
   name: string,
-  basePath?: string,
 ): Promise<Result<WorktreeDoesNotExistSuccess, WorktreeAlreadyExistsError>> {
-  const worktreePath = getWorktreePath(gitRoot, name, basePath);
+  const worktreePath = getWorktreePathFromDirectory(worktreeDirectory, name);
 
   try {
     await fs.access(worktreePath);
@@ -41,14 +41,11 @@ export async function validateWorktreeDoesNotExist(
   }
 }
 
-export async function validatePhantomDirectoryExists(
-  gitRoot: string,
-  basePath?: string,
+export async function validateWorktreeDirectoryExists(
+  worktreeDirectory: string,
 ): Promise<boolean> {
-  const phantomDir = getPhantomDirectory(gitRoot, basePath);
-
   try {
-    await fs.access(phantomDir);
+    await fs.access(worktreeDirectory);
     return true;
   } catch {
     return false;

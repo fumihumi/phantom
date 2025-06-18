@@ -1,8 +1,9 @@
 import {
   WorktreeAlreadyExistsError,
   attachWorktreeCore,
+  createContext,
+  getWorktreePathFromDirectory,
 } from "@aku11i/phantom-core";
-import { getWorktreePath } from "@aku11i/phantom-core/src/paths.ts";
 import { fetch, getGitRoot, setUpstreamBranch } from "@aku11i/phantom-git";
 import { type Result, err, isErr, ok } from "@aku11i/phantom-shared";
 import type { GitHubPullRequest } from "../api/index.ts";
@@ -18,6 +19,7 @@ export async function checkoutPullRequest(
   pullRequest: GitHubPullRequest,
 ): Promise<Result<CheckoutResult>> {
   const gitRoot = await getGitRoot();
+  const context = await createContext(gitRoot);
   const worktreeName = `pr-${pullRequest.number}`;
   const localBranch = `pr-${pullRequest.number}`;
 
@@ -56,12 +58,19 @@ export async function checkoutPullRequest(
   }
 
   // Attach the worktree to the fetched branch
-  const attachResult = await attachWorktreeCore(gitRoot, worktreeName);
-
-  const worktreePath = getWorktreePath(gitRoot, worktreeName);
+  const attachResult = await attachWorktreeCore(
+    context.gitRoot,
+    context.worktreesDirectory,
+    worktreeName,
+  );
 
   if (isErr(attachResult)) {
     if (attachResult.error instanceof WorktreeAlreadyExistsError) {
+      // For already exists case, we need to construct the path
+      const worktreePath = getWorktreePathFromDirectory(
+        context.worktreesDirectory,
+        worktreeName,
+      );
       return ok({
         message: `Worktree for PR #${pullRequest.number} is already checked out`,
         worktree: worktreeName,
@@ -79,6 +88,6 @@ export async function checkoutPullRequest(
   return ok({
     message,
     worktree: worktreeName,
-    path: worktreePath,
+    path: attachResult.value,
   });
 }
