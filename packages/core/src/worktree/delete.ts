@@ -49,20 +49,15 @@ export async function removeWorktree(
   worktreePath: string,
   force = false,
 ): Promise<void> {
-  try {
-    await executeGitCommand(["worktree", "remove", worktreePath], {
-      cwd: gitRoot,
-    });
-  } catch (error) {
-    // Always try force removal if the regular removal fails
-    try {
-      await executeGitCommand(["worktree", "remove", "--force", worktreePath], {
-        cwd: gitRoot,
-      });
-    } catch {
-      throw new Error("Failed to remove worktree");
-    }
+  const args = ["worktree", "remove"];
+  if (force) {
+    args.push("--force");
   }
+  args.push(worktreePath);
+
+  await executeGitCommand(args, {
+    cwd: gitRoot,
+  });
 }
 
 export async function deleteBranch(
