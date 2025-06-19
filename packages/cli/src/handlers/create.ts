@@ -1,13 +1,9 @@
 import { parseArgs } from "node:util";
 import {
-  ConfigNotFoundError,
-  ConfigParseError,
-  ConfigValidationError,
   WorktreeAlreadyExistsError,
   createContext,
   createWorktree as createWorktreeCore,
   execInWorktree,
-  loadConfig,
   shellInWorktree,
 } from "@aku11i/phantom-core";
 import { getGitRoot } from "@aku11i/phantom-git";
@@ -114,19 +110,8 @@ export async function createHandler(args: string[]): Promise<void> {
     let filesToCopy: string[] = [];
 
     // Load files from config
-    const configResult = await loadConfig(gitRoot);
-    if (isOk(configResult)) {
-      if (configResult.value.postCreate?.copyFiles) {
-        filesToCopy = [...configResult.value.postCreate.copyFiles];
-      }
-    } else {
-      // Display warning for validation and parse errors
-      if (configResult.error instanceof ConfigValidationError) {
-        output.warn(`Configuration warning: ${configResult.error.message}`);
-      } else if (configResult.error instanceof ConfigParseError) {
-        output.warn(`Configuration warning: ${configResult.error.message}`);
-      }
-      // ConfigNotFoundError remains silent as the config file is optional
+    if (context.config?.postCreate?.copyFiles) {
+      filesToCopy = [...context.config.postCreate.copyFiles];
     }
 
     // Add files from CLI options
@@ -146,6 +131,8 @@ export async function createHandler(args: string[]): Promise<void> {
         copyFiles: filesToCopy.length > 0 ? filesToCopy : undefined,
         base: baseOption,
       },
+      filesToCopy.length > 0 ? filesToCopy : undefined,
+      context.config?.postCreate?.commands,
     );
 
     if (isErr(result)) {
@@ -162,40 +149,6 @@ export async function createHandler(args: string[]): Promise<void> {
       output.error(
         `\nWarning: Failed to copy some files: ${result.value.copyError}`,
       );
-    }
-
-    // Execute post-create commands from config
-    if (isOk(configResult) && configResult.value.postCreate?.commands) {
-      const commands = configResult.value.postCreate.commands;
-      output.log("\nRunning post-create commands...");
-
-      for (const command of commands) {
-        output.log(`Executing: ${command}`);
-        const shell = process.env.SHELL || "/bin/sh";
-        const cmdResult = await execInWorktree(
-          context.gitRoot,
-          context.worktreesDirectory,
-          worktreeName,
-          [shell, "-c", command],
-        );
-
-        if (isErr(cmdResult)) {
-          output.error(`Failed to execute command: ${cmdResult.error.message}`);
-          const exitCode =
-            "exitCode" in cmdResult.error
-              ? (cmdResult.error.exitCode ?? exitCodes.generalError)
-              : exitCodes.generalError;
-          exitWithError(`Post-create command failed: ${command}`, exitCode);
-        }
-
-        // Check exit code
-        if (cmdResult.value.exitCode !== 0) {
-          exitWithError(
-            `Post-create command failed: ${command}`,
-            cmdResult.value.exitCode,
-          );
-        }
-      }
     }
 
     if (execCommand && isOk(result)) {

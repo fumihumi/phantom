@@ -2,6 +2,7 @@ import { deepStrictEqual, rejects } from "node:assert";
 import { describe, it, mock } from "node:test";
 import {
   BranchNotFoundError,
+  ConfigNotFoundError,
   WorktreeAlreadyExistsError,
 } from "@aku11i/phantom-core";
 import { err, ok } from "@aku11i/phantom-shared";
@@ -10,10 +11,12 @@ const exitWithErrorMock = mock.fn((message, code) => {
   throw new Error(`Exit with code ${code}: ${message}`);
 });
 const outputLogMock = mock.fn();
+const outputErrorMock = mock.fn();
 const getGitRootMock = mock.fn();
 const attachWorktreeCoreMock = mock.fn();
 const shellInWorktreeMock = mock.fn();
 const execInWorktreeMock = mock.fn();
+const createContextMock = mock.fn();
 
 mock.module("../errors.ts", {
   namedExports: {
@@ -29,7 +32,7 @@ mock.module("../errors.ts", {
 
 mock.module("../output.ts", {
   namedExports: {
-    output: { log: outputLogMock },
+    output: { log: outputLogMock, error: outputErrorMock },
   },
 });
 
@@ -46,15 +49,7 @@ mock.module("@aku11i/phantom-core", {
     WorktreeAlreadyExistsError,
     shellInWorktree: shellInWorktreeMock,
     execInWorktree: execInWorktreeMock,
-    createContext: mock.fn((gitRoot) =>
-      Promise.resolve({
-        gitRoot,
-        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
-      }),
-    ),
-    loadConfig: mock.fn(() =>
-      Promise.resolve({ ok: false, error: new Error("Config not found") }),
-    ),
+    createContext: createContextMock,
     getWorktreesDirectory: mock.fn((gitRoot, worktreesDirectory) => {
       return worktreesDirectory || `${gitRoot}/.git/phantom/worktrees`;
     }),
@@ -67,7 +62,17 @@ describe("attachHandler", () => {
   it("should attach to existing branch successfully", async () => {
     exitWithErrorMock.mock.resetCalls();
     outputLogMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
+    attachWorktreeCoreMock.mock.resetCalls();
+
     getGitRootMock.mock.mockImplementation(() => Promise.resolve("/repo"));
+    createContextMock.mock.mockImplementation((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+        config: null,
+      }),
+    );
     attachWorktreeCoreMock.mock.mockImplementation(() =>
       Promise.resolve(ok("/repo/.git/phantom/worktrees/feature")),
     );
@@ -83,11 +88,14 @@ describe("attachHandler", () => {
       "/repo",
       "/repo/.git/phantom/worktrees",
       "feature",
+      undefined, // postCreateCopyFiles
+      undefined, // postCreateCommands
     ]);
   });
 
   it("should exit with error when no branch name provided", async () => {
     exitWithErrorMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
 
     await rejects(async () => await attachHandler([]), /Exit with code 3/);
 
@@ -95,12 +103,14 @@ describe("attachHandler", () => {
       "Missing required argument: branch name",
       3,
     ]);
+    deepStrictEqual(createContextMock.mock.calls.length, 0);
   });
 
   it("should exit with error when both --shell and --exec are provided", async () => {
     exitWithErrorMock.mock.resetCalls();
     getGitRootMock.mock.resetCalls();
     attachWorktreeCoreMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
 
     await rejects(
       async () => await attachHandler(["feature", "--shell", "--exec", "ls"]),
@@ -113,11 +123,20 @@ describe("attachHandler", () => {
     ]);
     deepStrictEqual(getGitRootMock.mock.calls.length, 0);
     deepStrictEqual(attachWorktreeCoreMock.mock.calls.length, 0);
+    deepStrictEqual(createContextMock.mock.calls.length, 0);
   });
 
   it("should handle BranchNotFoundError", async () => {
     exitWithErrorMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
     getGitRootMock.mock.mockImplementation(() => Promise.resolve("/repo"));
+    createContextMock.mock.mockImplementation((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+        config: null,
+      }),
+    );
     attachWorktreeCoreMock.mock.mockImplementation(() =>
       Promise.resolve(err(new BranchNotFoundError("nonexistent"))),
     );
@@ -136,11 +155,19 @@ describe("attachHandler", () => {
   it("should spawn shell when --shell flag is provided", async () => {
     exitWithErrorMock.mock.resetCalls();
     outputLogMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
     shellInWorktreeMock.mock.resetCalls();
     shellInWorktreeMock.mock.mockImplementation(() =>
       Promise.resolve(ok({ exitCode: 0 })),
     );
     getGitRootMock.mock.mockImplementation(() => Promise.resolve("/repo"));
+    createContextMock.mock.mockImplementation((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+        config: null,
+      }),
+    );
     attachWorktreeCoreMock.mock.mockImplementation(() =>
       Promise.resolve(ok("/repo/.git/phantom/worktrees/feature")),
     );
@@ -157,11 +184,19 @@ describe("attachHandler", () => {
   it("should execute command when --exec flag is provided", async () => {
     exitWithErrorMock.mock.resetCalls();
     outputLogMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
     execInWorktreeMock.mock.resetCalls();
     execInWorktreeMock.mock.mockImplementation(() =>
       Promise.resolve(ok({ exitCode: 0 })),
     );
     getGitRootMock.mock.mockImplementation(() => Promise.resolve("/repo"));
+    createContextMock.mock.mockImplementation((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+        config: null,
+      }),
+    );
     attachWorktreeCoreMock.mock.mockImplementation(() =>
       Promise.resolve(ok("/repo/.git/phantom/worktrees/feature")),
     );
@@ -179,5 +214,167 @@ describe("attachHandler", () => {
     deepStrictEqual(execArgs[0], "/bin/bash");
     deepStrictEqual(execArgs[1], "-c");
     deepStrictEqual(execArgs[2], "echo hello");
+  });
+
+  it("should pass postCreate config to attachWorktreeCore", async () => {
+    exitWithErrorMock.mock.resetCalls();
+    outputLogMock.mock.resetCalls();
+    outputErrorMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
+    attachWorktreeCoreMock.mock.resetCalls();
+
+    getGitRootMock.mock.mockImplementation(() => Promise.resolve("/repo"));
+    createContextMock.mock.mockImplementation((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+        config: {
+          postCreate: {
+            copyFiles: [".env", "config.json"],
+            commands: ["npm install", "npm run build"],
+          },
+        },
+      }),
+    );
+    attachWorktreeCoreMock.mock.mockImplementation(() =>
+      Promise.resolve(ok("/repo/.git/phantom/worktrees/feature")),
+    );
+
+    await attachHandler(["feature"]);
+
+    // Verify that attachWorktreeCore was called with extracted postCreate values
+    deepStrictEqual(attachWorktreeCoreMock.mock.calls.length, 1);
+    const [
+      gitRoot,
+      worktreeDirectory,
+      name,
+      postCreateCopyFiles,
+      postCreateCommands,
+    ] = attachWorktreeCoreMock.mock.calls[0].arguments;
+    deepStrictEqual(gitRoot, "/repo");
+    deepStrictEqual(worktreeDirectory, "/repo/.git/phantom/worktrees");
+    deepStrictEqual(name, "feature");
+    deepStrictEqual(postCreateCopyFiles, [".env", "config.json"]);
+    deepStrictEqual(postCreateCommands, ["npm install", "npm run build"]);
+  });
+
+  it("should handle config not found gracefully", async () => {
+    exitWithErrorMock.mock.resetCalls();
+    outputLogMock.mock.resetCalls();
+    outputErrorMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
+    attachWorktreeCoreMock.mock.resetCalls();
+
+    getGitRootMock.mock.mockImplementation(() => Promise.resolve("/repo"));
+    createContextMock.mock.mockImplementation((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+        config: null,
+      }),
+    );
+    attachWorktreeCoreMock.mock.mockImplementation(() =>
+      Promise.resolve(ok("/repo/.git/phantom/worktrees/feature")),
+    );
+
+    await attachHandler(["feature"]);
+
+    // Verify that attachWorktreeCore was called with undefined postCreate parameters
+    deepStrictEqual(attachWorktreeCoreMock.mock.calls.length, 1);
+    const [
+      gitRoot,
+      worktreeDirectory,
+      name,
+      postCreateCopyFiles,
+      postCreateCommands,
+    ] = attachWorktreeCoreMock.mock.calls[0].arguments;
+    deepStrictEqual(postCreateCopyFiles, undefined);
+    deepStrictEqual(postCreateCommands, undefined);
+    deepStrictEqual(outputErrorMock.mock.calls.length, 0);
+  });
+
+  it("should pass config with postCreate to attachWorktreeCore", async () => {
+    exitWithErrorMock.mock.resetCalls();
+    outputLogMock.mock.resetCalls();
+    outputErrorMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
+    attachWorktreeCoreMock.mock.resetCalls();
+
+    getGitRootMock.mock.mockImplementation(() => Promise.resolve("/repo"));
+    createContextMock.mock.mockImplementation((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+        config: {
+          postCreate: {
+            copyFiles: [".env"],
+            commands: ["echo test"],
+          },
+        },
+      }),
+    );
+    attachWorktreeCoreMock.mock.mockImplementation(() =>
+      Promise.resolve(ok("/repo/.git/phantom/worktrees/feature")),
+    );
+
+    await attachHandler(["feature"]);
+
+    // Verify that attachWorktreeCore was called with the extracted postCreate values
+    deepStrictEqual(attachWorktreeCoreMock.mock.calls.length, 1);
+    const [
+      gitRoot,
+      worktreeDirectory,
+      name,
+      postCreateCopyFiles,
+      postCreateCommands,
+    ] = attachWorktreeCoreMock.mock.calls[0].arguments;
+    deepStrictEqual(postCreateCopyFiles, [".env"]);
+    deepStrictEqual(postCreateCommands, ["echo test"]);
+  });
+
+  it("should exit with error if attachWorktreeCore fails due to postCreate", async () => {
+    exitWithErrorMock.mock.resetCalls();
+    outputLogMock.mock.resetCalls();
+    createContextMock.mock.resetCalls();
+    attachWorktreeCoreMock.mock.resetCalls();
+
+    getGitRootMock.mock.mockImplementation(() => Promise.resolve("/repo"));
+    createContextMock.mock.mockImplementation((gitRoot) =>
+      Promise.resolve({
+        gitRoot,
+        worktreesDirectory: `${gitRoot}/.git/phantom/worktrees`,
+        config: {
+          postCreate: {
+            commands: ["invalid-command"],
+          },
+        },
+      }),
+    );
+    // attachWorktreeCore now handles postCreate internally and returns error
+    attachWorktreeCoreMock.mock.mockImplementation(() =>
+      Promise.resolve(err(new Error("Command failed: invalid-command"))),
+    );
+
+    await rejects(
+      async () => await attachHandler(["feature"]),
+      /Exit with code 1/,
+    );
+
+    deepStrictEqual(exitWithErrorMock.mock.calls[0].arguments, [
+      "Command failed: invalid-command",
+      1,
+    ]);
+
+    // Verify that attachWorktreeCore was called with extracted postCreate values
+    deepStrictEqual(attachWorktreeCoreMock.mock.calls.length, 1);
+    const [
+      gitRoot,
+      worktreeDirectory,
+      name,
+      postCreateCopyFiles,
+      postCreateCommands,
+    ] = attachWorktreeCoreMock.mock.calls[0].arguments;
+    deepStrictEqual(postCreateCopyFiles, undefined);
+    deepStrictEqual(postCreateCommands, ["invalid-command"]);
   });
 });

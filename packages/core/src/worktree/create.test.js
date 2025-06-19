@@ -50,6 +50,9 @@ mock.module("./validate.ts", {
   namedExports: {
     validateWorktreeDoesNotExist: validateWorktreeDoesNotExistMock,
     validateWorktreeName: validateWorktreeNameMock,
+    validateWorktreeExists: mock.fn(() =>
+      Promise.resolve({ ok: true, value: { path: "/mock/path" } }),
+    ),
   },
 });
 
@@ -104,6 +107,8 @@ describe("createWorktree", () => {
       "/test/repo/.git/phantom/worktrees",
       "feature-branch",
       {},
+      undefined,
+      undefined,
     );
 
     strictEqual(isOk(result), true);
@@ -145,6 +150,8 @@ describe("createWorktree", () => {
       "/test/repo/.git/phantom/worktrees",
       "new-feature",
       {},
+      undefined,
+      undefined,
     );
 
     strictEqual(mkdirMock.mock.calls.length, 1);
@@ -166,6 +173,8 @@ describe("createWorktree", () => {
       "/test/repo/.git/phantom/worktrees",
       "existing",
       {},
+      undefined,
+      undefined,
     );
 
     strictEqual(isErr(result), true);
@@ -193,6 +202,8 @@ describe("createWorktree", () => {
         branch: "custom-branch",
         base: "main",
       },
+      undefined,
+      undefined,
     );
 
     const worktreeOptions2 = addWorktreeMock.mock.calls[0].arguments[0];
@@ -217,6 +228,8 @@ describe("createWorktree", () => {
       "/test/repo/.git/phantom/worktrees",
       "bad-branch",
       {},
+      undefined,
+      undefined,
     );
 
     strictEqual(isErr(result), true);
@@ -249,6 +262,8 @@ describe("createWorktree", () => {
         "/test/phantom-external",
         "feature-branch",
         {},
+        undefined,
+        undefined,
       );
 
       strictEqual(isOk(result), true);
@@ -289,6 +304,8 @@ describe("createWorktree", () => {
         "/tmp/phantom-worktrees",
         "feature-branch",
         {},
+        undefined,
+        undefined,
       );
 
       strictEqual(isOk(result), true);
@@ -323,6 +340,8 @@ describe("createWorktree", () => {
         "/test/phantom-external",
         "feature-branch",
         {},
+        undefined,
+        undefined,
       );
 
       strictEqual(validateWorktreeDoesNotExistMock.mock.callCount(), 1);

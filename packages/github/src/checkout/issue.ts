@@ -34,6 +34,8 @@ export async function checkoutIssue(
       branch: branchName,
       base,
     },
+    context.config?.postCreate?.copyFiles,
+    context.config?.postCreate?.commands,
   );
 
   if (isErr(result)) {

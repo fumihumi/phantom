@@ -52,6 +52,8 @@ export async function attachHandler(args: string[]): Promise<void> {
     context.gitRoot,
     context.worktreesDirectory,
     branchName,
+    context.config?.postCreate?.copyFiles,
+    context.config?.postCreate?.commands,
   );
 
   if (isErr(result)) {

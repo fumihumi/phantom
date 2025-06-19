@@ -14,6 +14,9 @@ const getWorktreePathFromDirectoryMock = mock.fn((worktreeDirectory, name) => {
 mock.module("./validate.ts", {
   namedExports: {
     validateWorktreeName: validateWorktreeNameMock,
+    validateWorktreeExists: mock.fn(() =>
+      Promise.resolve({ ok: true, value: { path: "/mock/path" } }),
+    ),
   },
 });
 
@@ -60,6 +63,8 @@ describe("attachWorktreeCore", () => {
       "/repo",
       "/repo/.git/phantom/worktrees",
       "feature-branch",
+      undefined,
+      undefined,
     );
 
     deepStrictEqual(result.ok, true);
@@ -97,6 +102,8 @@ describe("attachWorktreeCore", () => {
       "/repo",
       "/repo/.git/phantom/worktrees",
       "feature/branch",
+      undefined,
+      undefined,
     );
 
     deepStrictEqual(result.ok, false);
@@ -120,6 +127,8 @@ describe("attachWorktreeCore", () => {
       "/repo",
       "/repo/.git/phantom/worktrees",
       "existing-feature",
+      undefined,
+      undefined,
     );
 
     deepStrictEqual(result.ok, false);
@@ -144,6 +153,8 @@ describe("attachWorktreeCore", () => {
       "/repo",
       "/repo/.git/phantom/worktrees",
       "non-existent",
+      undefined,
+      undefined,
     );
 
     deepStrictEqual(result.ok, false);
@@ -168,6 +179,8 @@ describe("attachWorktreeCore", () => {
       "/repo",
       "/repo/.git/phantom/worktrees",
       "feature",
+      undefined,
+      undefined,
     );
 
     deepStrictEqual(result.ok, false);
@@ -188,6 +201,8 @@ describe("attachWorktreeCore", () => {
       "/repo",
       "/repo/.git/phantom/worktrees",
       "feature",
+      undefined,
+      undefined,
     );
 
     deepStrictEqual(result.ok, false);

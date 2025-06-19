@@ -86,6 +86,8 @@ describe("createWorktreeTool", () => {
         branch: "feature-1",
         base: undefined,
       },
+      undefined,
+      undefined,
     ]);
 
     strictEqual(result.content.length, 1);
@@ -130,6 +132,8 @@ describe("createWorktreeTool", () => {
         branch: "feature-2",
         base: "develop",
       },
+      undefined,
+      undefined,
     ]);
 
     const parsedContent = JSON.parse(result.content[0].text);
